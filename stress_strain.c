@@ -5,6 +5,10 @@ Calculates unknown properties for a
 stress-strain element.
 Assumes isotropic material properties
 
+TODO: Finish calculation engine and
+include auxiliary calculations (eg.
+Von Mises stress, principle stresses,
+etc.)
 ****************************************/
 
 #include <stdio.h>
@@ -17,6 +21,7 @@ Assumes isotropic material properties
 void assign_vals(double * var_ptrs[NUM_VARS], char unknown, char vars[NUM_VARS][2][255]);
 void make_stiffness(double E, double v, double stiffness[][6]);
 int get_unknown_ind(char vars[NUM_VARS][2][255], char unknown);
+double get_err(double stiffness[][6],double * var_ptrs[NUM_VARS]);
 double rand_v(void);
 double rand_E(void);
 double rand_stress(void);
@@ -89,23 +94,20 @@ int main (void)
 
   // TODO - non-comically-primitive numerical methods
   double stiffness[6][6];
-  for (i=0; i<10; i++); // blind guesses, then select best of the guesses
+  double prev_err;
+  double err;
+  double soln_conv;
+  for (i=0; i<20; i++) // blind guesses, then select best of the guesses
   {
     *var_ptrs[unknown_ind]=(*fptr[r_ind])(); //pulls the right random num
     make_stiffness(E,v,stiffness);
+    err=get_err(stiffness,var_ptrs);
+    if (i==0)
+      prev_err=err;
+    if (prev_err>=err)
+      soln_conv=*var_ptrs[unknown_ind];
+    printf("%f\n",*var_ptrs[unknown_ind]);
   }
-
-  // Print stiffness matrix
-  for (i=0; i<6; i++)
-    {
-      for (j=0; j<6; j++)
-	{
-	  if ((j+6*i+1)%6==0)
-	    printf("%f\n",stiffness[i][j]);
-	  else
-	    printf("%f ",stiffness[i][j]);
-	}
-    }
   
   return 0;
 }
@@ -198,4 +200,32 @@ double rand_strain(void)
   double max_strain=0.002; // Plastic deformation defined at ~0.2%
   strain=max_strain*((double)rand()/(double)RAND_MAX);
   return strain;
+}
+
+double get_err(double stiffness[][6],double * var_ptrs[NUM_VARS])
+{
+  int i;
+  int j;
+  double l_side, r_side;
+  double mag_avg;
+  double err_cont;
+  double err_sqr;
+  double err_sqr_total=0;
+  //stress vector
+  double stress[6]={*var_ptrs[0],*var_ptrs[1],*var_ptrs[2],
+		    *var_ptrs[3],*var_ptrs[4],*var_ptrs[5]};
+  double strain[6]={*var_ptrs[6],*var_ptrs[7],*var_ptrs[8],
+		    *var_ptrs[9],*var_ptrs[10],*var_ptrs[11]};
+  for (i=0; i<6; i++)
+    {
+      l_side=stress[i];
+      r_side=0;
+      for (j=0; j<6; j++)
+	r_side+=stiffness[i][j]*strain[j];
+      mag_avg=(l_side-r_side)/2;
+      err_cont=(l_side-r_side)/mag_avg;
+      err_sqr=err_cont*err_cont;
+      err_sqr_total+=err_sqr;
+    }
+  return err_sqr_total;
 }
