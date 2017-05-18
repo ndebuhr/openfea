@@ -9,16 +9,18 @@ TODO: Finish calculation engine and
 include auxiliary calculations (eg.
 Von Mises stress, principle stresses,
 etc.)
+
 ****************************************/
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <stdbool.h>
 #define STR_LEN 255
 #define NUM_VARS 14
 
-void assign_vals(double * var_ptrs[NUM_VARS], char unknown, char vars[NUM_VARS][2][255]);
+void assign_vals(double * var_ptrs[NUM_VARS], char unknown[], char vars[NUM_VARS][2][255]);
 void make_stiffness(double E, double v, double stiffness[][6]);
 int get_unknown_ind(char vars[NUM_VARS][2][255], char unknown);
 double get_err(double stiffness[][6],double * var_ptrs[NUM_VARS]);
@@ -26,6 +28,7 @@ double rand_v(void);
 double rand_E(void);
 double rand_stress(void);
 double rand_strain(void);
+int rand_index(char unknown);
 
 int main (void)
 {
@@ -39,7 +42,7 @@ int main (void)
   int unknown_ind;
   int i;
   int j;
-  int r_ind;
+  int r_ind[6];
   // Solid mechanics variables
   double sigma_x, sigma_y, sigma_z, tau_xy, tau_yz, tau_xz, epsilon_x, epsilon_y, epsilon_z, gamma_xy, gamma_yz, gamma_xz, E, v;
   double * var_ptrs[NUM_VARS]={&sigma_x,&sigma_y,&sigma_z,
@@ -52,45 +55,24 @@ int main (void)
   double (*fptr_stress)(void)=&rand_stress;
   double (*fptr_strain)(void)=&rand_strain;
   double (*fptr[4])(void)={fptr_v,fptr_E,fptr_stress,fptr_strain};
-	  
+  char unknowns[6];
+  int unknown_inds[6];
+  
   printf(" INDEX | NAME\n");
   for (i=0; i<NUM_VARS; i++)
     printf("   %c   | %s\n",vars[i][0][0],vars[i][1]);
 
-  printf("\nPlease specify the unknown variable (type the index only): ");
-  unknown=getchar();
-  while (getchar()!='\n'); //clear residual stdin buffer chars
+  for (i=0; i<6; i++)
+    {
+      printf("\nPlease specify the unknown variable %d (type the index only): ",i+1);
+      unknowns[i]=getchar();
+      while (getchar()!='\n'); //clear residual stdin buffer chars
 
-  switch (unknown) {
-  case 'A' :
-  case 'B' :
-  case 'C' :
-  case 'D' :
-  case 'E' :
-  case 'F' :
-    r_ind=2; //use stress-style rand
-    break;
-  case 'G' :
-  case 'H' :
-  case 'I' :
-  case 'J' :
-  case 'K' :
-  case 'L' :
-    r_ind=3; //use strain-style rand
-    break;
-  case 'M' :
-    r_ind=1; //use elasticity-style rand
-    break;
-  case 'N' :
-    r_ind=0; //use poisson-style rand
-    break;
-  default :
-    printf("Index not valid\n");
-    return 0;
-  }
-  
-  unknown_ind=get_unknown_ind(vars,unknown);
-  assign_vals(var_ptrs,unknown,vars);
+      r_ind[i]=rand_index(unknowns[i]);
+      unknown_inds[i]=get_unknown_ind(vars,unknowns[i]);
+    }
+
+  assign_vals(var_ptrs,unknowns,vars);  
 
   // TODO - non-comically-primitive numerical methods
   double stiffness[6][6];
@@ -99,7 +81,8 @@ int main (void)
   double soln_conv;
   for (i=0; i<20; i++) // blind guesses, then select best of the guesses
   {
-    *var_ptrs[unknown_ind]=(*fptr[r_ind])(); //pulls the right random num
+    for (j=0;j<6;j++)
+      *var_ptrs[unknown_inds[j]]=(*fptr[r_ind[j]])(); //pulls the right random num
     make_stiffness(E,v,stiffness);
     err=get_err(stiffness,var_ptrs);
     if (i==0)
@@ -112,13 +95,19 @@ int main (void)
   return 0;
 }
 
-void assign_vals(double * var_ptrs[NUM_VARS], char unknown, char vars[NUM_VARS][2][255])
+void assign_vals(double * var_ptrs[NUM_VARS], char unknown[], char vars[NUM_VARS][2][255])
 {
   int i;
+  int j;
+  bool is_known;
   
   for (i=0; i<NUM_VARS; i++)
     {
-      if (unknown != vars[i][0][0])
+      is_known=true;
+      for (j=0; j<6; j++)
+	if (unknown[j] == vars[i][0][0])
+	  is_known=false;
+      if (is_known)
 	{
 	  printf("Please provide a value for %s:",vars[i][1]);
 	  scanf("%lf",var_ptrs[i]);
@@ -241,4 +230,35 @@ double get_err(double stiffness[][6],double * var_ptrs[NUM_VARS])
       err_sqr_total+=err_sqr;
     }
   return err_sqr_total;
+}
+
+int rand_index(char unknown)
+{
+  int r_ind;
+  switch (unknown) {
+  case 'A' :
+  case 'B' :
+  case 'C' :
+  case 'D' :
+  case 'E' :
+  case 'F' :
+    r_ind=2; //use stress-style rand
+    break;
+  case 'G' :
+  case 'H' :
+  case 'I' :
+  case 'J' :
+  case 'K' :
+  case 'L' :
+    r_ind=3; //use strain-style rand
+    break;
+  case 'M' :
+    r_ind=1; //use elasticity-style rand
+    break;
+  case 'N' :
+    r_ind=0; //use poisson-style rand
+    break;
+  }
+  
+  return r_ind;
 }
