@@ -106,7 +106,7 @@ int main (void)
       prev_err=err;
     if (prev_err>=err)
       soln_conv=*var_ptrs[unknown_ind];
-    printf("%f\n",*var_ptrs[unknown_ind]);
+    printf("%10f - %10f - %10f - %10f\n",soln_conv,*var_ptrs[unknown_ind],prev_err,err);
   }
   
   return 0;
@@ -181,24 +181,34 @@ double rand_v(void)
 double rand_E(void)
 {
   double E; // N/m^2 (Pa)
-  double max_E=1*10^12; // 1 TPa ~Young's Modulus of Diamond
-  E=max_E*((double)rand()/(double)RAND_MAX);
+  double lin_dist, nonlin_dist;
+  lin_dist=((double)rand()/(double)RAND_MAX); //0 to 1
+  nonlin_dist=pow(lin_dist,10); //dist bias towards lower numbers
+  double max_E=1*pow(10,12); // 1 TPa ~Young's Modulus of Diamond
+  E=max_E*nonlin_dist;
   return E;
 }
 
 double rand_stress(void)
 {
   double stress; // N/m^2 (Pa)
-  double max_stress=100*10^9; // 100 TPa ~Tensile Strength of Diamond
-  stress=max_stress*((double)rand()/(double)RAND_MAX);
+  double lin_dist, nonlin_dist;
+  lin_dist=((double)rand()/(double)RAND_MAX); //0 to 1
+  nonlin_dist=pow(lin_dist,10); //dist bias towards lower numbers
+  double max_stress=100*pow(10,9); // 100 TPa ~Tensile Strength of Diamond
+  stress=max_stress*nonlin_dist;
+  printf("Random stress is %f\n",stress);
   return stress;
 }
 
 double rand_strain(void)
 {
   double strain; // unitless
+  double lin_dist, nonlin_dist;
+  lin_dist=((double)rand()/(double)RAND_MAX); //0 to 1
+  nonlin_dist=pow(lin_dist,10); //dist bias towards lower numbers
   double max_strain=0.002; // Plastic deformation defined at ~0.2%
-  strain=max_strain*((double)rand()/(double)RAND_MAX);
+  strain=max_strain*nonlin_dist;
   return strain;
 }
 
@@ -224,6 +234,8 @@ double get_err(double stiffness[][6],double * var_ptrs[NUM_VARS])
 	r_side+=stiffness[i][j]*strain[j];
       mag_avg=(l_side-r_side)/2;
       err_cont=(l_side-r_side)/mag_avg;
+      if (isnan(err_cont))
+	err_cont=0; //resolves divide by 0 if no error
       err_sqr=err_cont*err_cont;
       err_sqr_total+=err_sqr;
     }
