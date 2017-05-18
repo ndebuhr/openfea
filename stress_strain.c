@@ -232,8 +232,9 @@ double get_err(double stiffness[][6],double * var_ptrs[NUM_VARS])
       r_side=0;
       for (j=0; j<6; j++)
 	r_side+=stiffness[i][j]*strain[j];
-      mag_avg=(l_side-r_side)/2;
-      err_cont=(l_side-r_side)/mag_avg;
+      printf("%10f - %10f\n",l_side,r_side);
+      mag_avg=(l_side+r_side)/2;
+      err_cont=(l_side-r_side)/mag_avg; //normalize error with magnitude
       if (isnan(err_cont))
 	err_cont=0; //resolves divide by 0 if no error
       err_sqr=err_cont*err_cont;
