@@ -17,8 +17,11 @@ etc.)
 #include <string.h>
 #include <math.h>
 #include <stdbool.h>
+#include <float.h>
+#include <time.h>
 #define STR_LEN 255
 #define NUM_VARS 14
+#define NUM_UNKNOWNS 5
 
 void assign_vals(double * var_ptrs[NUM_VARS], char unknown[], char vars[NUM_VARS][2][255]);
 void make_stiffness(double E, double v, double stiffness[][6]);
@@ -32,6 +35,7 @@ int rand_index(char unknown);
 
 int main (void)
 {
+  clock_t begin = clock();
   // Programming variables
   char vars[NUM_VARS][2][255]={{"A","Normal Stress in X"},{"B","Normal Stress in Y"},{"C","Normal Stress in Z"},
 			       {"D","Shear Stress XY"},{"E","Shear Stress YZ"},{"F","Shear Stress XZ"},
@@ -42,7 +46,7 @@ int main (void)
   int unknown_ind;
   int i;
   int j;
-  int r_ind[6];
+  int r_ind[5];
   // Solid mechanics variables
   double sigma_x, sigma_y, sigma_z, tau_xy, tau_yz, tau_xz, epsilon_x, epsilon_y, epsilon_z, gamma_xy, gamma_yz, gamma_xz, E, v;
   double * var_ptrs[NUM_VARS]={&sigma_x,&sigma_y,&sigma_z,
@@ -55,14 +59,14 @@ int main (void)
   double (*fptr_stress)(void)=&rand_stress;
   double (*fptr_strain)(void)=&rand_strain;
   double (*fptr[4])(void)={fptr_v,fptr_E,fptr_stress,fptr_strain};
-  char unknowns[6];
-  int unknown_inds[6];
+  char unknowns[5];
+  int unknown_inds[5];
   
   printf(" INDEX | NAME\n");
   for (i=0; i<NUM_VARS; i++)
     printf("   %c   | %s\n",vars[i][0][0],vars[i][1]);
 
-  for (i=0; i<6; i++)
+  for (i=0; i<5; i++)
     {
       printf("\nPlease specify the unknown variable %d (type the index only): ",i+1);
       unknowns[i]=getchar();
@@ -78,19 +82,31 @@ int main (void)
   double stiffness[6][6];
   double prev_err;
   double err;
-  double soln_conv;
-  for (i=0; i<20; i++) // blind guesses, then select best of the guesses
+  double soln_conv[5];
+  for (i=0; i<10000000; i++) // blind guesses, then select best of the guesses
   {
-    for (j=0;j<6;j++)
+    for (j=0;j<5;j++)
       *var_ptrs[unknown_inds[j]]=(*fptr[r_ind[j]])(); //pulls the right random num
     make_stiffness(E,v,stiffness);
     err=get_err(stiffness,var_ptrs);
     if (i==0)
-      prev_err=err;
-    if (prev_err>=err)
-      soln_conv=*var_ptrs[unknown_ind];
-    printf("%10f - %10f - %10f - %10f\n",soln_conv,*var_ptrs[unknown_ind],prev_err,err);
+      {
+	prev_err=err;
+	for (j=0; j<5; j++)
+	  soln_conv[j]=*var_ptrs[unknown_inds[j]];
+      }
+    if (prev_err>err)
+      {
+	for (j=0; j<5; j++)
+	  soln_conv[j]=*var_ptrs[unknown_inds[j]];
+	prev_err=err;
+      }
+    printf("%f - %f - %f - %f\n",soln_conv[0],*var_ptrs[unknown_inds[0]],prev_err,err);
   }
+
+  clock_t end = clock();
+  double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+  printf("Minutes spent: %f\n",time_spent/60);
   
   return 0;
 }
@@ -104,7 +120,7 @@ void assign_vals(double * var_ptrs[NUM_VARS], char unknown[], char vars[NUM_VARS
   for (i=0; i<NUM_VARS; i++)
     {
       is_known=true;
-      for (j=0; j<6; j++)
+      for (j=0; j<5; j++)
 	if (unknown[j] == vars[i][0][0])
 	  is_known=false;
       if (is_known)
@@ -164,6 +180,7 @@ double rand_v(void)
 {
   double v; // unitless
   v=((double)rand()/(double)RAND_MAX);
+  printf("Random Poisson is %f\n",v);
   return v;
 }
 
@@ -175,6 +192,7 @@ double rand_E(void)
   nonlin_dist=pow(lin_dist,10); //dist bias towards lower numbers
   double max_E=1*pow(10,12); // 1 TPa ~Young's Modulus of Diamond
   E=max_E*nonlin_dist;
+  printf("Random elastic modulus is %f\n",E);
   return E;
 }
 
@@ -184,7 +202,8 @@ double rand_stress(void)
   double lin_dist, nonlin_dist;
   lin_dist=((double)rand()/(double)RAND_MAX); //0 to 1
   nonlin_dist=pow(lin_dist,10); //dist bias towards lower numbers
-  double max_stress=100*pow(10,9); // 100 TPa ~Tensile Strength of Diamond
+  /* double max_stress=100*pow(10,9); // 100 TPa ~Tensile Strength of Diamond */
+  double max_stress=10000; //temp for particular problem
   stress=max_stress*nonlin_dist;
   printf("Random stress is %f\n",stress);
   return stress;
@@ -196,8 +215,10 @@ double rand_strain(void)
   double lin_dist, nonlin_dist;
   lin_dist=((double)rand()/(double)RAND_MAX); //0 to 1
   nonlin_dist=pow(lin_dist,10); //dist bias towards lower numbers
-  double max_strain=0.002; // Plastic deformation defined at ~0.2%
+  /* double max_strain=0.002; // Plastic deformation defined at ~0.2% */
+  double max_strain=0.2; //temp for specific problem
   strain=max_strain*nonlin_dist;
+  printf("Random strain is %f\n",strain);
   return strain;
 }
 
@@ -209,12 +230,13 @@ double get_err(double stiffness[][6],double * var_ptrs[NUM_VARS])
   double mag_avg;
   double err_cont;
   double err_sqr;
-  double err_sqr_total=0;
+  double err_sqr_total;
   //stress vector
   double stress[6]={*var_ptrs[0],*var_ptrs[1],*var_ptrs[2],
 		    *var_ptrs[3],*var_ptrs[4],*var_ptrs[5]};
   double strain[6]={*var_ptrs[6],*var_ptrs[7],*var_ptrs[8],
 		    *var_ptrs[9],*var_ptrs[10],*var_ptrs[11]};
+  err_sqr_total=0;
   for (i=0; i<6; i++)
     {
       l_side=stress[i];
@@ -222,13 +244,14 @@ double get_err(double stiffness[][6],double * var_ptrs[NUM_VARS])
       for (j=0; j<6; j++)
 	r_side+=stiffness[i][j]*strain[j];
       printf("%10f - %10f\n",l_side,r_side);
-      mag_avg=(l_side+r_side)/2;
-      err_cont=(l_side-r_side)/mag_avg; //normalize error with magnitude
+      mag_avg=(fabs(l_side)+fabs(r_side))/2;
+      err_cont=(fabs(l_side-r_side))/mag_avg; //normalize error with magnitude
       if (isnan(err_cont))
 	err_cont=0; //resolves divide by 0 if no error
-      err_sqr=err_cont*err_cont;
-      err_sqr_total+=err_sqr;
+      err_sqr_total+=err_cont*err_cont;
     }
+  if (isnan(err_sqr_total))
+    err_sqr_total=DBL_MAX; //ceiling on error
   return err_sqr_total;
 }
 
