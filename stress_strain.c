@@ -23,9 +23,9 @@ etc.)
 #define NUM_VARS 14
 #define NUM_UNKNOWNS 5
 
-void assign_vals(double * var_ptrs[NUM_VARS], char unknown[], char vars[NUM_VARS][2][255]);
+void assign_vals(double * var_ptrs[NUM_VARS], char unknown[], char vars[NUM_VARS][2][STR_LEN]);
 void make_stiffness(double E, double v, double stiffness[][6]);
-int get_unknown_ind(char vars[NUM_VARS][2][255], char unknown);
+int get_unknown_ind(char vars[NUM_VARS][2][STR_LEN], char unknown);
 double get_err(double stiffness[][6],double * var_ptrs[NUM_VARS]);
 double rand_v(void);
 double rand_E(void);
@@ -37,7 +37,7 @@ int main (void)
 {
   clock_t begin = clock();
   // Programming variables
-  char vars[NUM_VARS][2][255]={{"A","Normal Stress in X"},{"B","Normal Stress in Y"},{"C","Normal Stress in Z"},
+  char vars[NUM_VARS][2][STR_LEN]={{"A","Normal Stress in X"},{"B","Normal Stress in Y"},{"C","Normal Stress in Z"},
 			       {"D","Shear Stress XY"},{"E","Shear Stress YZ"},{"F","Shear Stress XZ"},
 			       {"G","Normal Strain in X"},{"H","Normal Strain in Y"},{"I","Normal Strain in Z"},
 			       {"J","Shear Strain in XY"},{"K","Shear Strain in YZ"},{"L","Shear Strain in XZ"},
@@ -46,7 +46,7 @@ int main (void)
   int unknown_ind;
   int i;
   int j;
-  int r_ind[5];
+  int r_ind[NUM_UNKNOWNS];
   // Solid mechanics variables
   double sigma_x, sigma_y, sigma_z, tau_xy, tau_yz, tau_xz, epsilon_x, epsilon_y, epsilon_z, gamma_xy, gamma_yz, gamma_xz, E, v;
   double * var_ptrs[NUM_VARS]={&sigma_x,&sigma_y,&sigma_z,
@@ -59,14 +59,14 @@ int main (void)
   double (*fptr_stress)(void)=&rand_stress;
   double (*fptr_strain)(void)=&rand_strain;
   double (*fptr[4])(void)={fptr_v,fptr_E,fptr_stress,fptr_strain};
-  char unknowns[5];
-  int unknown_inds[5];
+  char unknowns[NUM_UNKNOWNS];
+  int unknown_inds[NUM_UNKNOWNS];
   
   printf(" INDEX | NAME\n");
   for (i=0; i<NUM_VARS; i++)
     printf("   %c   | %s\n",vars[i][0][0],vars[i][1]);
 
-  for (i=0; i<5; i++)
+  for (i=0; i<NUM_UNKNOWNS; i++)
     {
       printf("\nPlease specify the unknown variable %d (type the index only): ",i+1);
       unknowns[i]=getchar();
@@ -82,22 +82,22 @@ int main (void)
   double stiffness[6][6];
   double prev_err;
   double err;
-  double soln_conv[5];
+  double soln_conv[NUM_UNKNOWNS];
   for (i=0; i<10000000; i++) // blind guesses, then select best of the guesses
   {
-    for (j=0;j<5;j++)
+    for (j=0;j<NUM_UNKNOWNS;j++)
       *var_ptrs[unknown_inds[j]]=(*fptr[r_ind[j]])(); //pulls the right random num
     make_stiffness(E,v,stiffness);
     err=get_err(stiffness,var_ptrs);
     if (i==0)
       {
 	prev_err=err;
-	for (j=0; j<5; j++)
+	for (j=0; j<NUM_UNKNOWNS; j++)
 	  soln_conv[j]=*var_ptrs[unknown_inds[j]];
       }
     if (prev_err>err)
       {
-	for (j=0; j<5; j++)
+	for (j=0; j<NUM_UNKNOWNS; j++)
 	  soln_conv[j]=*var_ptrs[unknown_inds[j]];
 	prev_err=err;
       }
@@ -111,7 +111,7 @@ int main (void)
   return 0;
 }
 
-void assign_vals(double * var_ptrs[NUM_VARS], char unknown[], char vars[NUM_VARS][2][255])
+void assign_vals(double * var_ptrs[NUM_VARS], char unknown[], char vars[NUM_VARS][2][STR_LEN])
 {
   int i;
   int j;
@@ -120,7 +120,7 @@ void assign_vals(double * var_ptrs[NUM_VARS], char unknown[], char vars[NUM_VARS
   for (i=0; i<NUM_VARS; i++)
     {
       is_known=true;
-      for (j=0; j<5; j++)
+      for (j=0; j<NUM_UNKNOWNS; j++)
 	if (unknown[j] == vars[i][0][0])
 	  is_known=false;
       if (is_known)
@@ -165,7 +165,7 @@ void make_stiffness(double E, double v, double stiffness[][6])
     }
 }
 
-int get_unknown_ind(char vars[NUM_VARS][2][255], char unknown)
+int get_unknown_ind(char vars[NUM_VARS][2][STR_LEN], char unknown)
 {
   int i;
 
