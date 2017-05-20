@@ -19,19 +19,7 @@ etc.)
 #include <stdbool.h>
 #include <float.h>
 #include <time.h>
-#define STR_LEN 255
-#define NUM_VARS 14
-#define NUM_UNKNOWNS 5
-
-void assign_vals(double * var_ptrs[NUM_VARS], char unknown[], char vars[NUM_VARS][2][STR_LEN]);
-void make_stiffness(double E, double v, double stiffness[][6]);
-int get_unknown_ind(char vars[NUM_VARS][2][STR_LEN], char unknown);
-double get_err(double stiffness[][6],double * var_ptrs[NUM_VARS]);
-double rand_v(void);
-double rand_E(void);
-double rand_stress(void);
-double rand_strain(void);
-int rand_index(char unknown);
+#include "stress_strain.h"
 
 int main (void)
 {
@@ -79,7 +67,7 @@ int main (void)
   assign_vals(var_ptrs,unknowns,vars);  
 
   // TODO - non-comically-primitive numerical methods
-  double stiffness[6][6];
+  double stiffness[STIFFNESS_SIZE][STIFFNESS_SIZE];
   double prev_err;
   double err;
   double soln_conv[NUM_UNKNOWNS];
@@ -132,7 +120,7 @@ void assign_vals(double * var_ptrs[NUM_VARS], char unknown[], char vars[NUM_VARS
     }
 }
 
-void make_stiffness(double E, double v, double stiffness[][6])
+void make_stiffness(double E, double v, double stiffness[][STIFFNESS_SIZE])
 {
   int i;
   int j;
@@ -216,13 +204,13 @@ double rand_strain(void)
   lin_dist=((double)rand()/(double)RAND_MAX); //0 to 1
   nonlin_dist=pow(lin_dist,10); //dist bias towards lower numbers
   /* double max_strain=0.002; // Plastic deformation defined at ~0.2% */
-  double max_strain=0.2; //temp for specific problem
+  double max_strain=1.0; //temp for specific problem
   strain=max_strain*nonlin_dist;
   printf("Random strain is %f\n",strain);
   return strain;
 }
 
-double get_err(double stiffness[][6],double * var_ptrs[NUM_VARS])
+double get_err(double stiffness[][STIFFNESS_SIZE],double * var_ptrs[NUM_VARS])
 {
   int i;
   int j;
@@ -232,16 +220,16 @@ double get_err(double stiffness[][6],double * var_ptrs[NUM_VARS])
   double err_sqr;
   double err_sqr_total;
   //stress vector
-  double stress[6]={*var_ptrs[0],*var_ptrs[1],*var_ptrs[2],
+  double stress[STIFFNESS_SIZE]={*var_ptrs[0],*var_ptrs[1],*var_ptrs[2],
 		    *var_ptrs[3],*var_ptrs[4],*var_ptrs[5]};
-  double strain[6]={*var_ptrs[6],*var_ptrs[7],*var_ptrs[8],
+  double strain[STIFFNESS_SIZE]={*var_ptrs[6],*var_ptrs[7],*var_ptrs[8],
 		    *var_ptrs[9],*var_ptrs[10],*var_ptrs[11]};
   err_sqr_total=0;
-  for (i=0; i<6; i++)
+  for (i=0; i<STIFFNESS_SIZE; i++)
     {
       l_side=stress[i];
       r_side=0;
-      for (j=0; j<6; j++)
+      for (j=0; j<STIFFNESS_SIZE; j++)
 	r_side+=stiffness[i][j]*strain[j];
       printf("%10f - %10f\n",l_side,r_side);
       mag_avg=(fabs(l_side)+fabs(r_side))/2;
