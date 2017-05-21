@@ -20,8 +20,9 @@ etc.)
 #include <float.h>
 #include <time.h>
 #include "stress_strain.h"
+#include "randoms.h"
 
-int main (void)
+int main (int argc, char * argv[])
 {
   clock_t begin = clock();
   // Programming variables
@@ -54,14 +55,27 @@ int main (void)
   for (i=0; i<NUM_VARS; i++)
     printf("   %c   | %s\n",vars[i][0][0],vars[i][1]);
 
-  for (i=0; i<NUM_UNKNOWNS; i++)
+  printf("%d\n",argc);
+  if (argc==1)
     {
-      printf("\nPlease specify the unknown variable %d (type the index only): ",i+1);
-      unknowns[i]=getchar();
-      while (getchar()!='\n'); //clear residual stdin buffer chars
-
-      r_ind[i]=rand_index(unknowns[i]);
-      unknown_inds[i]=get_unknown_ind(vars,unknowns[i]);
+      for (i=0; i<NUM_UNKNOWNS; i++)
+	{
+	  printf("\nPlease specify the unknown variable %d (type the index only): ",i+1);
+	  unknowns[i]=getchar();
+	  while (getchar()!='\n'); //clear residual stdin buffer chars
+	  
+	  r_ind[i]=rand_index(unknowns[i]);
+	  unknown_inds[i]=get_unknown_ind(vars,unknowns[i]);
+	}
+    }
+  else
+    {
+      for (i=0; i<NUM_UNKNOWNS; i++)
+	{
+	  unknowns[i]=argv[1][i];
+	  r_ind[i]=rand_index(unknowns[i]);
+	  unknown_inds[i]=get_unknown_ind(vars,unknowns[i]);
+	}
     }
 
   assign_vals(var_ptrs,unknowns,vars);  
