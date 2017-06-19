@@ -18,5 +18,3 @@ for x in range(0,int(poly_size)):
     u_coeffs.append(int(poly_val))
 
 u=np.poly1d(u_coeffs)
-
-# All good up to here
