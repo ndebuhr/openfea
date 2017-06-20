@@ -85,10 +85,17 @@ def set_c(K,mult):
 
 def assign_stresses(u, trusses):
     for i in range(0,len(trusses)):
+        u_local = np.zeros((4,1))
         truss = trusses[i]
-        disp1 = u[truss.node1][0]
-        disp2 = u[truss.node2][0]
-        truss.stress = (truss.E/truss.l)*(disp2-disp1)
+        node1 = truss.node1
+        node2 = truss.node2
+        u_local[0][0] = u[truss.node1*2][0]
+        u_local[1][0] = u[truss.node1*2+1][0]
+        u_local[2][0] = u[truss.node2*2][0]
+        u_local[3][0] = u[truss.node2*2+1][0]
+        stress = (truss.E/truss.l)*np.matrix(truss.eL)*\
+                 np.matrix(u_local)
+        truss.stress = stress.tolist()[0][0]
 
 dof = int(input('Number of nodes: '))*2
 
@@ -118,6 +125,6 @@ assign_stresses(u,trusses)
 for i in range(0, len(trusses)):
     print(trusses[i].stress)
 
-print(K,len(K))
-print(F,len(F))
-print(u,len(u))
+# print(K,len(K))
+# print(F,len(F))
+# print(u,len(u))
