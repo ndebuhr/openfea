@@ -6,7 +6,7 @@ numerical_mult = 1e9
 
 class truss:
     def __init__(self, x1, x2, y1, y2, E, A,
-                 node1, node2, stress=None):
+                 node1, node2, stress=None, strain=None):
         self.x1 = x1
         self.x2 = x2
         self.y1 = y1
@@ -96,6 +96,7 @@ def assign_stresses(u, trusses):
         stress = (truss.E/truss.l)*np.matrix(truss.eL)*\
                  np.matrix(u_local)
         truss.stress = stress.tolist()[0][0]
+        truss.strain = truss.stress/truss.E
 
 dof = int(input('Number of nodes: '))*2
 
