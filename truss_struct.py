@@ -57,8 +57,8 @@ def compile_F(dof, forces):
     F = np.zeros((dof,1))
     for i in range(0,len(forces)):
         node = forces[i].node
-        F[node][0] += forces[i].fx
-        F[node+1][0] += forces[i].fy
+        F[node*2][0] += forces[i].fx
+        F[node*2+1][0] += forces[i].fy
     return F
 
 def fix_nodes(K, F, c, fixed_nodes):
