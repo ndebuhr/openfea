@@ -123,9 +123,15 @@ K, F = fix_nodes(K,F,c,fixed_nodes)
 u = solve_u(K,F)
 assign_stresses(u,trusses)
 
-for i in range(0, len(trusses)):
-    print(trusses[i].stress)
+K_orig = compile_K(dof,trusses)
+F_orig = compile_F(dof,forces)
+R = np.matrix(K_orig)*np.matrix(u)-np.matrix(F_orig)
+R = R.tolist()
 
-# print(K,len(K))
-# print(F,len(F))
-# print(u,len(u))
+stresses=[]
+for i in range(0, len(trusses)):
+    stresses.append(trusses[i].stress)
+
+print('\nDisplacements\n',np.matrix(u))
+print('\nStresses\n',np.matrix(stresses))
+print('\nReactions\n',np.matrix(R))
