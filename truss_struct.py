@@ -3,6 +3,7 @@ from scipy.optimize import fsolve
 from scipy.optimize import minimize
 
 numerical_mult = 1e9
+spatial_dims = 2
 
 class truss:
     def __init__(self, x1, x2, y1, y2, E, A,
@@ -47,26 +48,26 @@ def compile_K(dof, trusses):
             for k in range(0,2):
                 node1 = trusses[i].node1
                 node2 = trusses[i].node2
-                K[j+2*node1][k+2*node1] += trusses[i].K2D[j][k]
-                K[j+2*node1][k+2*node2] += trusses[i].K2D[j][k+2]
-                K[j+2*node2][k+2*node1] += trusses[i].K2D[j+2][k]
-                K[j+2*node2][k+2*node2] += trusses[i].K2D[j+2][k+2]
+                K[j+spatial_dims*node1][k+spatial_dims*node1] += trusses[i].K2D[j][k]
+                K[j+spatial_dims*node1][k+spatial_dims*node2] += trusses[i].K2D[j][k+2]
+                K[j+spatial_dims*node2][k+spatial_dims*node1] += trusses[i].K2D[j+2][k]
+                K[j+spatial_dims*node2][k+spatial_dims*node2] += trusses[i].K2D[j+2][k+2]
     return K
 
 def compile_F(dof, forces):
     F = np.zeros((dof,1))
     for i in range(0,len(forces)):
         node = forces[i].node
-        F[node*2][0] += forces[i].fx
-        F[node*2+1][0] += forces[i].fy
+        F[node*spatial_dims][0] += forces[i].fx
+        F[node*spatial_dims+1][0] += forces[i].fy
     return F
 
 def fix_nodes(K, F, c, fixed_nodes):
     for i in range(0,len(fixed_nodes)):
         if (fixed_nodes[i].x_or_y == 'x'):
-            ind = 2*fixed_nodes[i].node
+            ind = spatial_dims*fixed_nodes[i].node
         if (fixed_nodes[i].x_or_y == 'y'):
-            ind = 2*fixed_nodes[i].node+1
+            ind = spatial_dims*fixed_nodes[i].node+1
         K[ind][ind] += c
         F[ind][0] += c*fixed_nodes[i].disp
     return K, F
@@ -89,16 +90,16 @@ def assign_stresses(u, trusses):
         truss = trusses[i]
         node1 = truss.node1
         node2 = truss.node2
-        u_local[0][0] = u[truss.node1*2][0]
-        u_local[1][0] = u[truss.node1*2+1][0]
-        u_local[2][0] = u[truss.node2*2][0]
-        u_local[3][0] = u[truss.node2*2+1][0]
+        u_local[0][0] = u[truss.node1*spatial_dims][0]
+        u_local[1][0] = u[truss.node1*spatial_dims+1][0]
+        u_local[2][0] = u[truss.node2*spatial_dims][0]
+        u_local[3][0] = u[truss.node2*spatial_dims+1][0]
         stress = (truss.E/truss.l)*np.matrix(truss.eL)*\
                  np.matrix(u_local)
         truss.stress = stress.tolist()[0][0]
         truss.strain = truss.stress/truss.E
 
-dof = int(input('Number of nodes: '))*2
+dof = int(input('Number of nodes: '))*spatial_dims
 
 A = truss(x1=0.5,x2=0,y1=0.3,y2=0.3,
           E=70e9,A=200*1e-6,node1=0,node2=1)
