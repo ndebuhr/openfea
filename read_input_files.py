@@ -1,4 +1,9 @@
 from utils import write_csv_rows, read_csv_rows
+from classes import truss, force, fixed_node
+
+class parse_var:
+    def __init__(self, descript_name, val=None, class_name):
+        self.descript_name = descript_name
 
 class output_table:
     def __init__(self, filename, content=None):
@@ -21,3 +26,6 @@ for i in range(0,len(output_files)):
 for i in range(0,len(output_files)):
     print(output_files[i].filename)
     print(output_files[i].content)
+
+c = parse_var(descript_name='Numerical Soln Multiplier')
+dof = parse_var(descript_name='Degrees of Freedom')
