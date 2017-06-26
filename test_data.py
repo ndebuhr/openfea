@@ -42,8 +42,16 @@ def test_trusses(nodes,num_trusses):
 
 def test_forces(nodes, num_forces):
     forces = []
+    force_nodes = []
+    while True:
+        new_node = random.randint(0,len(nodes)-1)
+        force_nodes.append(new_node)
+        force_nodes = set(force_nodes)
+        force_nodes = list(force_nodes)
+        if len(force_nodes)==num_forces:
+            break
     for i in range(0,num_forces):
-        node = random.randint(0,len(nodes)-1)
+        node = force_nodes[i]
         x = nodes[node][0]
         y = nodes[node][1]
         Fx = random.uniform(1,1e6)
