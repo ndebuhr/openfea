@@ -72,6 +72,46 @@ def read_connectivity(tbl_content, node_coords):
           ' from connectivity table')
     return trusses
 
+def read_forces(tbl_content, node_coords):
+    if blanks_exist(tbl_content):
+        print('Table values must not be left blank')
+        return 1 #Stop function execution
+    ind_x = tbl_content[1].index('x')
+    ind_y = tbl_content[1].index('y')
+    ind_fx = tbl_content[1].index('Fx')
+    ind_fy = tbl_content[1].index('Fy')
+    forces = []
+    for i in range(2,len(tbl_content)):
+        x = float(tbl_content[i][ind_x])
+        y = float(tbl_content[i][ind_y])
+        fx = float(tbl_content[i][ind_fx])
+        fy = float(tbl_content[i][ind_fy])
+        node = node_coords.index([x,y])
+        forces.append(force(fx,fy,node))
+    print('Read ' + str(len(forces)) + ' forces' +\
+          ' from forces table')
+    return forces
+
+def read_bcs(tbl_content, node_coords):
+    if blanks_exist(tbl_content):
+        print('Table values must not be left blank')
+        return 1 #Stop function execution
+    ind_x = tbl_content[1].index('x')
+    ind_y = tbl_content[1].index('y')
+    ind_xory = tbl_content[1].index('Constrained Dimension')
+    ind_disp = tbl_content[1].index('Displacement')
+    bcs = []
+    for i in range(2,len(tbl_content)):
+        x = float(tbl_content[i][ind_x])
+        y = float(tbl_content[i][ind_y])
+        x_or_y = tbl_content[i][ind_xory]
+        disp = float(tbl_content[i][ind_disp])
+        node = node_coords.index([x,y])
+        bcs.append(fixed_node(node,x_or_y,disp))
+    print('Read ' + str(len(bcs)) + ' boundary conditions' +\
+          ' from boundary conditions table')
+    return bcs
+        
 def read_params(tbl_content, var_list):
     if blanks_exist(tbl_content):
         print('Table values must not be left blank')
@@ -121,3 +161,12 @@ for i in range(0,len(nodes)):
 trusses = read_connectivity(connect_tbl.content,node_coords)
 # for i in range(0,len(trusses)):
 #     print(trusses[i].x1,trusses[i].x2,trusses[i].node1,trusses[i].node2)
+
+forces = read_forces(force_tbl.content,node_coords)
+# for i in range(0,len(forces)):
+#     print(forces[i].fx, forces[i].fy, forces[i].node)
+
+fixed_nodes = read_bcs(bc_tbl.content,node_coords)
+for i in range(0,len(fixed_nodes)):
+    print(fixed_nodes[i].node, fixed_nodes[i].x_or_y,
+          fixed_nodes[i].disp)
