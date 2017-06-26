@@ -27,7 +27,7 @@ def test_trusses(nodes,num_trusses):
         trusses.append([nodes[i][0],nodes[i][1],
                         nodes[i-1][0],nodes[i-1][1],
                         E,A])
-    for i in range(num_trusses-len(nodes)-1): #additional random connections
+    for i in range(0,num_trusses-len(nodes)+1): #additional random connections
         E = random.uniform(1,1e12)
         A = random.uniform(1e-6,1e6)
         while True:
