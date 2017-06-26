@@ -8,7 +8,7 @@ class parse_var:
 class output_table:
     def __init__(self, filename, content=None):
         self.filename = filename
-
+        
 def blanks_exist(tbl):
     for i in range(2,len(tbl)): #Don't check first (table name) row
         if (len(tbl[i]) != len(tbl[i-1])):
@@ -18,7 +18,44 @@ def blanks_exist(tbl):
                 return True
     return False
 
-def read_tbl(tbl_content,var_list):
+def define_nodes(tbl_content):
+    if blanks_exist(tbl_content):
+        print('Table values must not be left blank')
+        return 1 #Stop function execution
+    ind_x1 = tbl_content[1].index('x1')
+    ind_y1 = tbl_content[1].index('y1')
+    ind_x2 = tbl_content[1].index('x2')
+    ind_y2 = tbl_content[1].index('y2')
+    coord_pairs = []
+    for i in range(2,len(tbl_content)):
+        coord_pairs.append([ind_x1,ind_y1])
+        coord_pairs.append([ind_x2,ind_y2])
+    coord_pairs = Set(coord_pairs) #remove uniques
+    coord_pairs = list(coord_pairs)
+    coord_pairs.sort()
+    for i in range(0,len(coord_pairs)):
+        coord_pairs[i].append(i)
+    
+def read_connectivity(tbl_content, class_type):
+    if blanks_exist(tbl_content):
+        print('Table values must not be left blank')
+        return 1 #Stop function execution
+    ind_x1 = tbl_content[1].index('x1')
+    ind_y1 = tbl_content[1].index('y1')
+    ind_x2 = tbl_content[1].index('x2')
+    ind_y2 = tbl_content[1].index('y2')
+    ind_E = tbl_content[1].index('E')
+    ind_A = tbl_content[1].index('A')
+    trusses = []
+    for i in range(2,len(tbl_content)): #content rows only
+        x1 = tbl_content[i][ind_x1]
+        y1 = tbl_content[i][ind_y1]
+        x2 = tbl_content[i][ind_x2]
+        y2 = tbl_content[i][ind_y2]
+        E = tbl_content[i][ind_E]
+        A = tbl_content[i][ind_A]            
+
+def read_params(tbl_content, var_list):
     if blanks_exist(tbl_content):
         print('Table values must not be left blank')
         return 1 #Stop function execution
@@ -44,16 +81,17 @@ for i in range(0,len(output_files)):
         output_files[i].content[j]=output_files[i].content[j].split(',')
     print('Successfully read ' + output_files[i].filename)
 
-# for i in range(0,len(output_files)):
-#     print(output_files[i].filename)
-#     print(output_files[i].content)
+for i in range(0,len(output_files)):
+    print(output_files[i].filename)
+    print(output_files[i].content)
 
 c = parse_var(descript_name='Numerical Soln Multiplier')
 dof = parse_var(descript_name='Degrees of Freedom')
 sim_params = [c,dof]
 
 print('\n')
-read_tbl(sim_tbl.content,sim_params)
+read_params(sim_tbl.content,sim_params)
+
 for i in range(0,len(sim_params)):
     print(sim_params[i].descript_name)
     print(sim_params[i].val)
