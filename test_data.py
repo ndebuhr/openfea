@@ -50,6 +50,26 @@ def test_forces(nodes, num_forces):
         Fy = random.uniform(1,1e6)
         forces.append([x,y,Fx,Fy])
     return forces
+
+def test_bcs(nodes, num_fixed):
+    bcs = []
+    fix_nodes = []
+    while True:
+        new_node = random.randint(0,len(nodes)-1)
+        fix_nodes.append(new_node)
+        fix_nodes = set(fix_nodes)
+        fix_nodes = list(fix_nodes)
+        if len(fix_nodes)==num_fixed:
+            break
+    for i in range(0,num_fixed):
+        node = fix_nodes[i]
+        if (random.randint(0,1)==1):
+            x_or_y = 'x'
+        else:
+            x_or_y = 'y'
+        bcs.append([nodes[node][0],nodes[node][1],
+                    x_or_y,0])
+    return bcs
     
 nodes = rand_nodes(num_nodes)
 
@@ -61,16 +81,26 @@ for i in range(0,len(trusses)):
 connect_tbl = input_table('connectivity.csv',
                           connect_list)
 
+force_list = [['Force Table'],
+              ['x','y','Fx','Fy']]
+forces = test_forces(nodes,num_forces)
+for i in range(0,len(forces)):
+    force_list.append(forces[i])
 force_tbl = input_table('forces.csv',
-                        [['Force Table'],
-                         ['x','y','Fx','Fy']])
+                        force_list)
+
+bc_list = [['Boundary Conditions'],
+           ['x','y','Constrained Dimension','Displacement']]
+bcs = test_bcs(nodes,num_fixed)
+for i in range(0,len(bcs)):
+    bc_list.append(bcs[i])
 bc_tbl = input_table('boundary_conditions.csv',
-                     [['Boundary Conditions'],
-                      ['x','y','Constrained Dimension','Displacement']])
+                     bc_list)
+
 sim_tbl = input_table('simulation_parameters.csv',
                       [['Simulation Parameters'],
                        ['Numerical Soln Multiplier','Degrees of Freedom'],
-                       ['1e9']])
+                       ['1e9',str(num_nodes*2)]])
 
 input_files = [connect_tbl,force_tbl,bc_tbl,sim_tbl]
 
