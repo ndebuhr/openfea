@@ -3,7 +3,11 @@ import random
 import argparse
 
 populate_data = False
-    
+test_E_range = [1,1e12]
+test_A_range = [1e-6,1e6]
+test_coord_range = [0,1000] #TODO test/allow negative numbers
+test_F_range = [1,1e6]
+
 class input_table:
     def __init__(self, filename, name, headers, content=[]):
         self.filename = filename
@@ -14,22 +18,22 @@ class input_table:
 def rand_nodes(num_nodes):
     nodes = []
     for i in range(0,num_nodes):
-        x = random.uniform(0, 1000)
-        y = random.uniform(0, 1000)
+        x = random.uniform(test_coord_range[0], test_coord_range[1])
+        y = random.uniform(test_coord_range[0], test_coord_range[1])
         nodes.append([x,y])
     return nodes
 
 def test_trusses(nodes,num_trusses):
     trusses = []
     for i in range(1,len(nodes)): #connect all nodes at least once
-        E = random.uniform(1,1e12)
-        A = random.uniform(1e-6,1e6)
+        E = random.uniform(test_E_range[0],test_E_range[1])
+        A = random.uniform(test_A_range[0],test_A_range[1])
         trusses.append([nodes[i][0],nodes[i][1],
                         nodes[i-1][0],nodes[i-1][1],
                         E,A])
     for i in range(0,num_trusses-len(nodes)+1): #additional random connections
-        E = random.uniform(1,1e12)
-        A = random.uniform(1e-6,1e6)
+        E = random.uniform(test_E_range[0],test_E_range[1])
+        A = random.uniform(test_A_range[0],test_A_range[1])
         while True:
             node1 = random.randint(0,len(nodes)-1)
             node2 = random.randint(0,len(nodes)-1)
@@ -54,8 +58,8 @@ def test_forces(nodes, num_forces):
         node = force_nodes[i]
         x = nodes[node][0]
         y = nodes[node][1]
-        Fx = random.uniform(1,1e6)
-        Fy = random.uniform(1,1e6)
+        Fx = random.uniform(test_F_range[0],test_F_range[1])
+        Fy = random.uniform(test_F_range[0],test_F_range[1])
         forces.append([x,y,Fx,Fy])
     return forces
 
