@@ -113,60 +113,66 @@ def read_bcs(tbl_content, node_coords):
     return bcs
         
 def read_params(tbl_content, var_list):
-    if blanks_exist(tbl_content):
-        print('Table values must not be left blank')
-        return 1 #Stop function execution
+    assert (blanks_exist(tbl_content),
+            'Table values must not be left blank')
     for i in range(0,len(tbl_content)):
         for j in range(0,len(tbl_content[i])):
             for k in range(0,len(var_list)):
                 if (tbl_content[i][j]==var_list[k].descript_name):
                     var_list[k].val=tbl_content[i+1][j]
-                    print('Set ' + sim_params[k].descript_name +\
-                            ' to ' + str(sim_tbl.content[i+1][j]))
-                    
-connect_tbl=output_table('connectivity.csv')
-force_tbl=output_table('forces.csv')
-bc_tbl=output_table('boundary_conditions.csv')
-sim_tbl=output_table('simulation_parameters.csv')
+                    print('Set ' + var_list[k].descript_name +\
+                            ' to ' + str(var_list[k].val))
+    return var_list
 
-output_files=[connect_tbl,force_tbl,bc_tbl,sim_tbl]
+def get_data():
 
-# Read in content and convert to nested list
-for i in range(0,len(output_files)):
-    output_files[i].content = read_csv_rows(output_files[i].filename)
-    for j in range(0,len(output_files[i].content)):
-        output_files[i].content[j]=output_files[i].content[j].split(',')
-    print('Successfully read ' + output_files[i].filename)
+    connect_tbl=output_table('connectivity.csv')
+    force_tbl=output_table('forces.csv')
+    bc_tbl=output_table('boundary_conditions.csv')
+    sim_tbl=output_table('simulation_parameters.csv')
+    
+    output_files=[connect_tbl,force_tbl,bc_tbl,sim_tbl]
 
-# for i in range(0,len(output_files)):
-#     print(output_files[i].filename)
-#     print(output_files[i].content)
+    # Read in content and convert to nested list
+    for i in range(0,len(output_files)):
+        output_files[i].content = read_csv_rows(output_files[i].filename)
+        for j in range(0,len(output_files[i].content)):
+            output_files[i].content[j]=output_files[i].content[j].split(',')
+            print('Successfully read ' + output_files[i].filename)
+            
+            # for i in range(0,len(output_files)):
+            #     print(output_files[i].filename)
+            #     print(output_files[i].content)
+            
+    num_mult = parse_var(descript_name='Numerical Soln Multiplier')
+    dof = parse_var(descript_name='Degrees of Freedom')
+    sim_params = [num_mult,dof]
+        
+    print('\n')
+    sim_params = read_params(sim_tbl.content,sim_params)
+    sim_params[0].val = int(sim_params[0].val)
+    sim_params[1].val = int(sim_params[1].val)
+    
+    # for i in range(0,len(sim_params)):
+    #     print(sim_params[i].descript_name)
+    #     print(sim_params[i].val)
+    
+    nodes = define_nodes(connect_tbl.content)
+    node_coords = []
+    for i in range(0,len(nodes)):
+        node_coords.append(nodes[i][0:2])
+        
+    trusses = read_connectivity(connect_tbl.content,node_coords)
+        # for i in range(0,len(trusses)):
+        #     print(trusses[i].x1,trusses[i].x2,trusses[i].node1,trusses[i].node2)
 
-c = parse_var(descript_name='Numerical Soln Multiplier')
-dof = parse_var(descript_name='Degrees of Freedom')
-sim_params = [c,dof]
+    forces = read_forces(force_tbl.content,node_coords)
+    # for i in range(0,len(forces)):
+    #     print(forces[i].fx, forces[i].fy, forces[i].node)
 
-print('\n')
-read_params(sim_tbl.content,sim_params)
+    fixed_nodes = read_bcs(bc_tbl.content,node_coords)
+    # for i in range(0,len(fixed_nodes)):
+    #     print(fixed_nodes[i].node, fixed_nodes[i].x_or_y,
+    #           fixed_nodes[i].disp)
 
-# for i in range(0,len(sim_params)):
-#     print(sim_params[i].descript_name)
-#     print(sim_params[i].val)
-
-nodes = define_nodes(connect_tbl.content)
-node_coords = []
-for i in range(0,len(nodes)):
-    node_coords.append(nodes[i][0:2])
-
-trusses = read_connectivity(connect_tbl.content,node_coords)
-# for i in range(0,len(trusses)):
-#     print(trusses[i].x1,trusses[i].x2,trusses[i].node1,trusses[i].node2)
-
-forces = read_forces(force_tbl.content,node_coords)
-# for i in range(0,len(forces)):
-#     print(forces[i].fx, forces[i].fy, forces[i].node)
-
-fixed_nodes = read_bcs(bc_tbl.content,node_coords)
-for i in range(0,len(fixed_nodes)):
-    print(fixed_nodes[i].node, fixed_nodes[i].x_or_y,
-          fixed_nodes[i].disp)
+    return trusses, forces, fixed_nodes, sim_params
