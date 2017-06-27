@@ -7,6 +7,7 @@ test_E_range = [1,1e12]
 test_A_range = [1e-6,1e6]
 test_coord_range = [0,1000] #TODO test/allow negative numbers
 test_F_range = [1,1e6]
+spatial_dims = 2
 
 class input_table:
     def __init__(self, filename, name, headers, content=[]):
@@ -147,6 +148,7 @@ if (args.test_data):
     force_tbl.content = append_test_data(force_tbl.content,forces)
     bcs = test_bcs(nodes,num_fixed)
     bc_tbl.content = append_test_data(bc_tbl.content,bcs)
+    sim_tbl.content = [sim_tbl.content[0]+[str(num_nodes*spatial_dims)]]
     
 input_files = [connect_tbl,force_tbl,bc_tbl,sim_tbl]
 
