@@ -81,7 +81,6 @@ def test_bcs(nodes, num_fixed):
 
 def append_test_data(tbl_content,test_data):
     for i in range(0,len(test_data)):
-        print(test_data[i])
         tbl_content.append(test_data[i])
         return test_data
 
@@ -122,22 +121,19 @@ sim_tbl = input_table(sim_filename,
                       sim_headers,
                       sim_content)
 
+def test_stdin(prompt, default):
+    test_num = input(prompt + ' [' + str(default) + ']: ')
+    test_num = (default if (test_num == '') else test_num)
+    return int(test_num)
+
 # Add randomly-generated test data if -t flag specified
 if (args.test_data):
-    num_nodes = input('Number of nodes [8]: ')
-    num_nodes = (8 if (num_nodes == '') else num_nodes)
-    num_nodes = int(num_nodes)
-    num_trusses = input('Number of trusses [12]: ')
-    num_trusses = (12 if (num_trusses == '') else num_trusses)
-    num_trusses = int(num_trusses)
+    num_nodes = test_stdin('Number of nodes',8)
+    num_trusses = test_stdin('Number of trusses',12)
     assert (num_trusses > num_nodes)
-    num_forces = input('Number of forces [3]: ')
-    num_forces = (3 if (num_forces == '') else num_forces)
-    num_forces = int(num_forces)
+    num_forces = test_stdin('Number of forces',3)
     assert (num_forces < num_nodes)
-    num_fixed = input('Number of fixed [4]: ')
-    num_fixed = (4 if (num_fixed == '') else num_fixed)
-    num_fixed = int(num_fixed)
+    num_fixed = test_stdin('Number of fixed',4)
     assert (num_fixed < num_nodes)
     
     nodes = rand_nodes(num_nodes)
