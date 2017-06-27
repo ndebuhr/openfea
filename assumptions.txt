@@ -1,0 +1,7 @@
+Assumptions
+Truss element displacement is approximated by 1D linear function - therefore, constant stress and strain throughout truss element
+Hooke's law assumptions (small displacement, linear elasticity)
+
+Notes
+Solution generated through numerical means
+Solver employes a finite element method approach, with "Penalty Method" numerically implementation

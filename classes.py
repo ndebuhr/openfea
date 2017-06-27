@@ -15,8 +15,6 @@ class truss:
         self.L = [[self.cos_t, self.sin_t, 0, 0],
                   [0, 0, self.cos_t, self.sin_t]]
         self.eL = [-self.cos_t, -self.sin_t, self.cos_t, self.sin_t]
-        # K1D definition assumes a linear approximation
-        # for the truss displacement function
         self.K1D = [[self.E*self.A/self.l, -self.E*self.A/self.l],
                     [-self.E*self.A/self.l, self.E*self.A/self.l]]
         self.K2D = (np.matrix(self.L).getT()*np.matrix(self.K1D)*\
