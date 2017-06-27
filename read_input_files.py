@@ -2,6 +2,8 @@ from utils import write_csv_rows, read_csv_rows
 from classes import truss, force, fixed_node
 import numpy as np #for development debug/format only
 
+spatial_dims = 2
+
 class parse_var:
     def __init__(self, descript_name, val=None, class_name=None):
         self.descript_name = descript_name
@@ -64,7 +66,9 @@ def read_connectivity(tbl_content, node_coords):
         node1 = node_coords.index([x1,y1])
         node2 = node_coords.index([x2,y2])
         E = float(tbl_content[i][ind_E])
+        assert (E>0)
         A = float(tbl_content[i][ind_A])
+        assert (A>0)
         trusses.append(truss(x1,x2,y1,y2,E,A,node1,node2))
     print('Read ' + str(len(trusses)) + ' trusses' +\
           ' from connectivity table')
@@ -101,6 +105,7 @@ def read_bcs(tbl_content, node_coords):
         x = float(tbl_content[i][ind_x])
         y = float(tbl_content[i][ind_y])
         x_or_y = tbl_content[i][ind_xory]
+        assert (x_or_y=='x' | x_or_y=='y')
         disp = float(tbl_content[i][ind_disp])
         node = node_coords.index([x,y])
         bcs.append(fixed_node(node,x_or_y,disp))
@@ -148,6 +153,9 @@ def get_data():
     sim_params = read_params(sim_tbl.content,sim_params)
     sim_params[0].val = int(sim_params[0].val)
     sim_params[1].val = int(sim_params[1].val)
+    assert (sim_params[0].val > 0)
+    assert (sim_params[1].val % spatial_dims == 0)
+    assert (sim_params[1].val > 0)
     
     # for i in range(0,len(sim_params)):
     #     print(sim_params[i].descript_name)
