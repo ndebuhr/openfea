@@ -12,7 +12,6 @@ class output_table:
         
 def blanks_exist(tbl):
     for i in range(2,len(tbl)): #Don't check first (table name) row
-        print(len(tbl[i]),len(tbl[i-1]))
         if (len(tbl[i]) != len(tbl[i-1])):
             return True
         for j in range(0,len(tbl[i])):
@@ -22,7 +21,7 @@ def blanks_exist(tbl):
 
 def define_nodes(tbl_content):
     assert not blanks_exist(tbl_content),\
-        'Table values must not be left blank'
+        'Connectivity table values must not be left blank'
     ind_x1 = tbl_content[1].index('x1')
     ind_y1 = tbl_content[1].index('y1')
     ind_x2 = tbl_content[1].index('x2')
@@ -49,7 +48,7 @@ def define_nodes(tbl_content):
         
 def read_connectivity(tbl_content, node_coords):
     assert not blanks_exist(tbl_content),\
-        'Table values must not be left blank'
+        'Connectivity table values must not be left blank'
     ind_x1 = tbl_content[1].index('x1')
     ind_y1 = tbl_content[1].index('y1')
     ind_x2 = tbl_content[1].index('x2')
@@ -73,7 +72,7 @@ def read_connectivity(tbl_content, node_coords):
 
 def read_forces(tbl_content, node_coords):
     assert not blanks_exist(tbl_content),\
-        'Table values must not be left blank'
+        'Forces table values must not be left blank'
     ind_x = tbl_content[1].index('x')
     ind_y = tbl_content[1].index('y')
     ind_fx = tbl_content[1].index('Fx')
@@ -92,7 +91,7 @@ def read_forces(tbl_content, node_coords):
 
 def read_bcs(tbl_content, node_coords):
     assert not blanks_exist(tbl_content),\
-        'Table values must not be left blank'
+        'Boundary conditions table values must not be left blank'
     ind_x = tbl_content[1].index('x')
     ind_y = tbl_content[1].index('y')
     ind_xory = tbl_content[1].index('Constrained Dimension')
@@ -111,7 +110,7 @@ def read_bcs(tbl_content, node_coords):
         
 def read_params(tbl_content, var_list):
     assert not blanks_exist(tbl_content),\
-        'Table values must not be left blank'
+        'Simulation parameters table values must not be left blank'
     for i in range(0,len(tbl_content)):
         for j in range(0,len(tbl_content[i])):
             for k in range(0,len(var_list)):
@@ -135,7 +134,7 @@ def get_data():
         output_files[i].content = read_csv_rows(output_files[i].filename)
         for j in range(0,len(output_files[i].content)):
             output_files[i].content[j]=output_files[i].content[j].split(',')
-            print('Successfully read ' + output_files[i].filename)
+        print('Successfully read ' + output_files[i].filename)
             
             # for i in range(0,len(output_files)):
             #     print(output_files[i].filename)
