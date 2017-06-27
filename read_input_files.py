@@ -12,6 +12,7 @@ class output_table:
         
 def blanks_exist(tbl):
     for i in range(2,len(tbl)): #Don't check first (table name) row
+        print(len(tbl[i]),len(tbl[i-1]))
         if (len(tbl[i]) != len(tbl[i-1])):
             return True
         for j in range(0,len(tbl[i])):
@@ -20,9 +21,8 @@ def blanks_exist(tbl):
     return False
 
 def define_nodes(tbl_content):
-    if blanks_exist(tbl_content):
-        print('Table values must not be left blank')
-        return 1 #Stop function execution
+    assert not blanks_exist(tbl_content),\
+        'Table values must not be left blank'
     ind_x1 = tbl_content[1].index('x1')
     ind_y1 = tbl_content[1].index('y1')
     ind_x2 = tbl_content[1].index('x2')
@@ -48,9 +48,8 @@ def define_nodes(tbl_content):
     return coord_pairs
         
 def read_connectivity(tbl_content, node_coords):
-    if blanks_exist(tbl_content):
-        print('Table values must not be left blank')
-        return 1 #Stop function execution
+    assert not blanks_exist(tbl_content),\
+        'Table values must not be left blank'
     ind_x1 = tbl_content[1].index('x1')
     ind_y1 = tbl_content[1].index('y1')
     ind_x2 = tbl_content[1].index('x2')
@@ -73,9 +72,8 @@ def read_connectivity(tbl_content, node_coords):
     return trusses
 
 def read_forces(tbl_content, node_coords):
-    if blanks_exist(tbl_content):
-        print('Table values must not be left blank')
-        return 1 #Stop function execution
+    assert not blanks_exist(tbl_content),\
+        'Table values must not be left blank'
     ind_x = tbl_content[1].index('x')
     ind_y = tbl_content[1].index('y')
     ind_fx = tbl_content[1].index('Fx')
@@ -93,9 +91,8 @@ def read_forces(tbl_content, node_coords):
     return forces
 
 def read_bcs(tbl_content, node_coords):
-    if blanks_exist(tbl_content):
-        print('Table values must not be left blank')
-        return 1 #Stop function execution
+    assert not blanks_exist(tbl_content),\
+        'Table values must not be left blank'
     ind_x = tbl_content[1].index('x')
     ind_y = tbl_content[1].index('y')
     ind_xory = tbl_content[1].index('Constrained Dimension')
@@ -113,8 +110,8 @@ def read_bcs(tbl_content, node_coords):
     return bcs
         
 def read_params(tbl_content, var_list):
-    assert (blanks_exist(tbl_content),
-            'Table values must not be left blank')
+    assert not blanks_exist(tbl_content),\
+        'Table values must not be left blank'
     for i in range(0,len(tbl_content)):
         for j in range(0,len(tbl_content[i])):
             for k in range(0,len(var_list)):
