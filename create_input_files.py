@@ -1,5 +1,9 @@
 from utils import write_csv_rows, read_csv_rows
+import random
+import argparse
 
+populate_data = False
+    
 class input_table:
     def __init__(self, filename, name, headers, content=[]):
         self.filename = filename
@@ -7,42 +11,149 @@ class input_table:
         self.headers = headers
         self.content = content
 
+def rand_nodes(num_nodes):
+    nodes = []
+    for i in range(0,num_nodes):
+        x = random.uniform(0, 1000)
+        y = random.uniform(0, 1000)
+        nodes.append([x,y])
+    return nodes
+
+def test_trusses(nodes,num_trusses):
+    trusses = []
+    for i in range(1,len(nodes)): #connect all nodes at least once
+        E = random.uniform(1,1e12)
+        A = random.uniform(1e-6,1e6)
+        trusses.append([nodes[i][0],nodes[i][1],
+                        nodes[i-1][0],nodes[i-1][1],
+                        E,A])
+    for i in range(0,num_trusses-len(nodes)+1): #additional random connections
+        E = random.uniform(1,1e12)
+        A = random.uniform(1e-6,1e6)
+        while True:
+            node1 = random.randint(0,len(nodes)-1)
+            node2 = random.randint(0,len(nodes)-1)
+            if (node1 != node2):
+                break
+        trusses.append([nodes[node1][0],nodes[node1][1],
+                        nodes[node2][0],nodes[node2][1],
+                        E,A])
+    return trusses        
+
+def test_forces(nodes, num_forces):
+    forces = []
+    force_nodes = []
+    while True:
+        new_node = random.randint(0,len(nodes)-1)
+        force_nodes.append(new_node)
+        force_nodes = set(force_nodes)
+        force_nodes = list(force_nodes)
+        if len(force_nodes)==num_forces:
+            break
+    for i in range(0,num_forces):
+        node = force_nodes[i]
+        x = nodes[node][0]
+        y = nodes[node][1]
+        Fx = random.uniform(1,1e6)
+        Fy = random.uniform(1,1e6)
+        forces.append([x,y,Fx,Fy])
+    return forces
+
+def test_bcs(nodes, num_fixed):
+    bcs = []
+    fix_nodes = []
+    while True:
+        new_node = random.randint(0,len(nodes)-1)
+        fix_nodes.append(new_node)
+        fix_nodes = set(fix_nodes)
+        fix_nodes = list(fix_nodes)
+        if len(fix_nodes)==num_fixed:
+            break
+    for i in range(0,num_fixed):
+        node = fix_nodes[i]
+        if (random.randint(0,1)==1):
+            x_or_y = 'x'
+        else:
+            x_or_y = 'y'
+        bcs.append([nodes[node][0],nodes[node][1],
+                    x_or_y,0])
+    return bcs
+
+def append_test_data(tbl_content,test_data):
+    for i in range(0,len(test_data)):
+        print(test_data[i])
+        tbl_content.append(test_data[i])
+        return test_data
+
+# Read arguments
+parser = argparse.ArgumentParser()
+parser.add_argument("-t", "--test_data",
+                    help="populate input files with test data",
+                    action="store_true")
+args = parser.parse_args()
+    
 connect_filename = 'connectivity.csv'
-connect_name = ['Connectivity Table']
+connect_name = 'Connectivity Table'
 connect_headers = ['x1','y1','x2','y2','E','A']
 connect_tbl = input_table(connect_filename,
                           connect_name,
                           connect_headers)
 
 force_filename = 'forces.csv'
-force_name = ['Force Table']
+force_name = 'Force Table'
 force_headers = ['x','y','Fx','Fy']
 force_tbl = input_table(force_filename,
                         force_name,
                         force_headers)
 
 bc_filename = 'boundary_conditions.csv'
-bc_name = ['Boundary Conditions']
+bc_name = 'Boundary Conditions'
 bc_headers = ['x','y','Constrained Dimension','Displacement']
 bc_tbl = input_table(bc_filename,
                      bc_name,
                      bc_headers)
 
 sim_filename = 'simulation_parameters.csv'
-sim_name = ['Simulation Parameters']
+sim_name = 'Simulation Parameters'
 sim_headers = ['Numerical Soln Multiplier','Degrees of Freedom']
-sim_content = ['1e9']
+sim_content = [['1e9']]
 sim_tbl = input_table(sim_filename,
                       sim_name,
                       sim_headers,
                       sim_content)
 
+# Add randomly-generated test data if -t flag specified
+if (args.test_data):
+    num_nodes = input('Number of nodes [8]: ')
+    num_nodes = (8 if (num_nodes == '') else num_nodes)
+    num_nodes = int(num_nodes)
+    num_trusses = input('Number of trusses [12]: ')
+    num_trusses = (12 if (num_trusses == '') else num_trusses)
+    num_trusses = int(num_trusses)
+    assert (num_trusses > num_nodes)
+    num_forces = input('Number of forces [3]: ')
+    num_forces = (3 if (num_forces == '') else num_forces)
+    num_forces = int(num_forces)
+    assert (num_forces < num_nodes)
+    num_fixed = input('Number of fixed [4]: ')
+    num_fixed = (4 if (num_fixed == '') else num_fixed)
+    num_fixed = int(num_fixed)
+    assert (num_fixed < num_nodes)
+    
+    nodes = rand_nodes(num_nodes)
+    trusses = test_trusses(nodes,num_trusses)
+    connect_tbl.content = append_test_data(connect_tbl.content,trusses);
+    forces = test_forces(nodes,num_forces)
+    force_tbl.content = append_test_data(force_tbl.content,forces)
+    bcs = test_bcs(nodes,num_fixed)
+    bc_tbl.content = append_test_data(bc_tbl.content,bcs)
+    
 input_files = [connect_tbl,force_tbl,bc_tbl,sim_tbl]
 
 for i in range(0,len(input_files)):
-    tbl_list = [input_files[i].name,
-                input_files[i].headers,
-                input_files[i].content]
+    tbl_list = [[input_files[i].name]] +\
+               [input_files[i].headers] +\
+               input_files[i].content
     write_csv_rows(input_files[i].filename,tbl_list)
-    print(input_files[i].name[0] + ' written to ' +\
+    print(input_files[i].name + ' written to ' +\
           input_files[i].filename)
