@@ -9,14 +9,32 @@ def get_max_stress(trusses):
             max_stress = abs(trusses[i].stress)
     return max_stress
 
+def get_max_dim(trusses):
+    max_dim = trusses[0].x1
+    for i in range(0,len(trusses)):
+        truss_max = max(abs(trusses[i].x1), abs(trusses[i].x2),
+                        abs(trusses[i].y1), abs(trusses[i].y2))
+        if (truss_max > max_dim):
+            max_dim = truss_max
+    return truss_max
+
 def get_line_color(stress, max_stress):
     # Color range from black (no stress) to red (max stress)
     perc_of_max = abs(stress)/abs(max_stress)
     return [perc_of_max,0,0]
 
-u, stresses, R, trusses = ts.calc_solution()
+def node_lookup(trusses):
+    nodes_set = {}
+    for i in range(0,len(trusses)):
+        nodes_set[str(trusses[i].node1)] = [trusses[i].x1,trusses[i].y1]
+    return nodes_set
+
+forces, u, stresses, R, trusses = ts.calc_solution()
 
 max_stress = get_max_stress(trusses)
+max_dim = get_max_dim(trusses)
+nodes_set = node_lookup(trusses)
+
 plt.figure(1)
 
 for i in range(0,len(trusses)):
@@ -31,6 +49,18 @@ for i in range(0,len(trusses)):
     # Provide annotative text next to truss, with stress quantity
     plt.text((x1+x2)/2, (y1+y2)/2, r'$\sigma='+('%.4E' % stress )+'$')
 
+for i in range(0,len(forces)):
+    if (forces[i].fx != 0):
+        xy = nodes_set[str(forces[i].node)]
+        x = xy[0]
+        y = xy[1]
+        plt.arrow(x, y, max_dim/30, 0, fc="b", ec="b", head_width=max_dim/80, head_length=max_dim/40 )
+    if (forces[i].fy != 0):
+        xy = nodes_set[str(forces[i].node)]
+        x = xy[0]
+        y = xy[1]
+        plt.arrow(x, y, 0, max_dim/30, fc="b", ec="b", head_width=max_dim/80, head_length=max_dim/40 )
+    
 plt.title('Truss Stresses')
 plt.gca().set_aspect('equal', adjustable='box') # No geometric skew
 plt.show()

@@ -92,4 +92,4 @@ def calc_solution():
     print('\nStresses\n',np.matrix(stresses))
     print('\nReactions\n',np.matrix(R))
 
-    return u, stresses, R, trusses
+    return forces, u, stresses, R, trusses
