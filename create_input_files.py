@@ -142,12 +142,12 @@ def test_stdin(prompt, default):
 
 # Add randomly-generated test data if -t flag specified
 if (args.test_data):
-    num_nodes = test_stdin('Number of nodes',8)
-    num_trusses = test_stdin('Number of trusses',12)
+    num_nodes = test_stdin('Number of nodes',5)
+    num_trusses = test_stdin('Number of trusses',8)
     assert (num_trusses > num_nodes)
-    num_forces = test_stdin('Number of forces',3)
+    num_forces = test_stdin('Number of forces',2)
     assert (num_forces < num_nodes)
-    num_fixed = test_stdin('Number of fixed',4)
+    num_fixed = test_stdin('Number of fixed',3)
     assert (num_fixed < num_nodes)
     
     nodes = rand_nodes(num_nodes)
