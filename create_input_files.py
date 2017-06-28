@@ -35,8 +35,6 @@ def test_trusses(nodes,num_trusses):
                         E,A])
         truss_set.append([nodes[i],nodes[i-1]])
     for i in range(len(nodes),num_trusses+1): #additional random connections
-        print(len(nodes))
-        print(num_trusses)
         E = random.uniform(test_E_range[0],test_E_range[1])
         A = random.uniform(test_A_range[0],test_A_range[1])
         while True:
@@ -49,14 +47,6 @@ def test_trusses(nodes,num_trusses):
                 if not (truss_add_fwd in truss_set):
                     if not (truss_add_back in truss_set):
                         break
-                    else:
-                        print(truss_add_back)
-                        print('\nBack found in\n')
-                        print(truss_set)                        
-                else:
-                    print(truss_add_fwd)
-                    print('\nFwd found in\n')
-                    print(truss_set)
         trusses.append([nodes[node1][0],nodes[node1][1],
                         nodes[node2][0],nodes[node2][1],
                         E,A])
