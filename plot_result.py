@@ -27,6 +27,7 @@ def node_lookup(trusses):
     nodes_set = {}
     for i in range(0,len(trusses)):
         nodes_set[str(trusses[i].node1)] = [trusses[i].x1,trusses[i].y1]
+        nodes_set[str(trusses[i].node2)] = [trusses[i].x2,trusses[i].y2]
     return nodes_set
 
 forces, u, stresses, R, trusses = ts.calc_solution()
