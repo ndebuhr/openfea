@@ -70,6 +70,11 @@ def test_forces(nodes, num_forces):
         y = nodes[node][1]
         Fx = random.uniform(test_F_range[0],test_F_range[1])
         Fy = random.uniform(test_F_range[0],test_F_range[1])
+        if (random.randint(0,1)):
+            if (random.randint(0,1)):
+                Fx = 0
+            else:
+                Fy=0
         forces.append([x,y,Fx,Fy])
     return forces
 
