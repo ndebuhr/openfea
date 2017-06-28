@@ -8,7 +8,7 @@ trusses, forces, fixed_nodes, sim_params = rif.get_data()
 
 numerical_mult = sim_params[0].val
 spatial_dims = 2
-        
+
 def compile_K(dof, trusses):
     K = np.zeros((dof, dof))
     for i in range(0,len(trusses)):
@@ -48,7 +48,7 @@ def solve_u(K, F):
 def set_c(K,mult):
     K_max = K[0][0]
     for i in range(0,len(K)):
-        if (K[i][i]>K_max):
+        if (K[i][i] > K_max):
             K_max = K[i][i] #check diagonals only
     return mult*K_max
 
@@ -69,23 +69,7 @@ def assign_stresses(u, trusses):
 
 def calc_solution():
         
-    # dof = int(input('Number of nodes: '))*spatial_dims
     dof = sim_params[1].val
-
-    # A = truss(x1=0.5,x2=0,y1=0.3,y2=0.3,
-    #           E=70e9,A=200*1e-6,node1=0,node2=1)
-    # B = truss(x1=0.5,x2=0.9,y1=0.3,y2=0,
-    #           E=70e9,A=200*1e-6,node1=0,node2=2)
-    # trusses = [A,B]
-
-    # f1 = force(fx=0,fy=-12e3,node=0)
-    # forces = [f1]
-    
-    # n1 = fixed_node(1,'x',0)
-    # n2 = fixed_node(1,'y',0)
-    # n3 = fixed_node(2,'x',0)
-    # n4 = fixed_node(2,'y',0)
-    # fixed_nodes=[n1,n2,n3,n4]
     
     K = compile_K(dof,trusses)
     F = compile_F(dof,forces)
@@ -100,7 +84,7 @@ def calc_solution():
     R = np.matrix(K_orig)*np.matrix(u)-np.matrix(F_orig)
     R = R.tolist()
     
-    stresses=[]
+    stresses = []
     for i in range(0, len(trusses)):
         stresses.append(trusses[i].stress)
         
