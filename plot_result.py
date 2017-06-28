@@ -63,4 +63,17 @@ for i in range(0,len(forces)):
     
 plt.title('Truss Stresses')
 plt.gca().set_aspect('equal', adjustable='box') # No geometric skew
+
+xmin, xmax = plt.xlim()
+lim_width = xmax-xmin
+xmin = xmin-0.1*lim_width
+xmax = xmax+0.1*lim_width
+plt.xlim( xmin, xmax )
+
+ymin, ymax = plt.ylim()
+lim_height = xmax-xmin
+ymin = ymin-0.1*lim_height
+ymax = ymax+0.1*lim_height
+plt.ylim( ymin, ymax )
+
 plt.show()
