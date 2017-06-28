@@ -47,10 +47,11 @@ def test_trusses(nodes,num_trusses):
                 if not (truss_add_fwd in truss_set):
                     if not (truss_add_back in truss_set):
                         break
+        truss_set.append([[nodes[node1][0],nodes[node1][1]],
+                          [nodes[node2][0],nodes[node2][1]]])
         trusses.append([nodes[node1][0],nodes[node1][1],
                         nodes[node2][0],nodes[node2][1],
                         E,A])
-        print('Trusses now at ' + str(len(trusses)) + ' out of ' + str(num_trusses) + '\n')
     return trusses
 
 def test_forces(nodes, num_forces):
