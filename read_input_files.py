@@ -1,8 +1,7 @@
 from utils import write_csv_rows, read_csv_rows
 from classes import truss, force, fixed_node
+from global_vars import *
 import numpy as np #for development debug/format only
-
-spatial_dims = 2
 
 class parse_var:
     def __init__(self, descript_name, val=None, class_name=None):
@@ -105,7 +104,7 @@ def read_bcs(tbl_content, node_coords):
         x = float(tbl_content[i][ind_x])
         y = float(tbl_content[i][ind_y])
         x_or_y = tbl_content[i][ind_xory]
-        assert (x_or_y=='x' | x_or_y=='y')
+        assert ( (x_or_y=='x') | (x_or_y=='y') )
         disp = float(tbl_content[i][ind_disp])
         node = node_coords.index([x,y])
         bcs.append(fixed_node(node,x_or_y,disp))
@@ -151,7 +150,7 @@ def get_data():
         
     print('\n')
     sim_params = read_params(sim_tbl.content,sim_params)
-    sim_params[0].val = int(sim_params[0].val)
+    sim_params[0].val = float(sim_params[0].val)
     sim_params[1].val = int(sim_params[1].val)
     assert (sim_params[0].val > 0)
     assert (sim_params[1].val % spatial_dims == 0)

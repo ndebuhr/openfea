@@ -1,13 +1,13 @@
-import numpy as np
-import read_input_files as rif
 from scipy.optimize import fsolve
 from scipy.optimize import minimize
 from classes import truss, force, fixed_node
+from global_vars import *
+import numpy as np
+import read_input_files as rif
 
 trusses, forces, fixed_nodes, sim_params = rif.get_data()
 
 numerical_mult = sim_params[0].val
-spatial_dims = 2
 
 def compile_K(dof, trusses):
     K = np.zeros((dof, dof))

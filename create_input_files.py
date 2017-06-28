@@ -1,4 +1,5 @@
 from utils import write_csv_rows, read_csv_rows
+from global_vars import *
 import random
 import argparse
 
@@ -7,7 +8,6 @@ test_E_range = [1,1e12]
 test_A_range = [1e-6,1e6]
 test_coord_range = [0,1000] #TODO test/allow negative numbers
 test_F_range = [1,1e6]
-spatial_dims = 2
 
 class input_table:
     def __init__(self, filename, name, headers, content=[]):
