@@ -26,24 +26,42 @@ def rand_nodes(num_nodes):
 
 def test_trusses(nodes,num_trusses):
     trusses = []
+    truss_set = []
     for i in range(1,len(nodes)): #connect all nodes at least once
         E = random.uniform(test_E_range[0],test_E_range[1])
         A = random.uniform(test_A_range[0],test_A_range[1])
         trusses.append([nodes[i][0],nodes[i][1],
                         nodes[i-1][0],nodes[i-1][1],
                         E,A])
-    for i in range(0,num_trusses-len(nodes)+1): #additional random connections
+        truss_set.append([nodes[i],nodes[i-1]])
+    for i in range(len(nodes),num_trusses+1): #additional random connections
+        print(len(nodes))
+        print(num_trusses)
         E = random.uniform(test_E_range[0],test_E_range[1])
         A = random.uniform(test_A_range[0],test_A_range[1])
         while True:
             node1 = random.randint(0,len(nodes)-1)
             node2 = random.randint(0,len(nodes)-1)
+            truss_add_fwd = [[nodes[node1][0],nodes[node1][1]],
+                             [nodes[node2][0],nodes[node2][1]]]
+            truss_add_back = [truss_add_fwd[1],truss_add_fwd[0]]
             if (node1 != node2):
-                break
+                if not (truss_add_fwd in truss_set):
+                    if not (truss_add_back in truss_set):
+                        break
+                    else:
+                        print(truss_add_back)
+                        print('\nBack found in\n')
+                        print(truss_set)                        
+                else:
+                    print(truss_add_fwd)
+                    print('\nFwd found in\n')
+                    print(truss_set)
         trusses.append([nodes[node1][0],nodes[node1][1],
                         nodes[node2][0],nodes[node2][1],
                         E,A])
-    return trusses        
+        print('Trusses now at ' + str(len(trusses)) + ' out of ' + str(num_trusses) + '\n')
+    return trusses
 
 def test_forces(nodes, num_forces):
     forces = []
