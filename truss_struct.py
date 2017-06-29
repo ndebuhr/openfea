@@ -12,30 +12,30 @@ numerical_mult = sim_params[0].val
 def compile_K(dof, trusses):
     K = np.zeros((dof, dof))
     for i in range(0,len(trusses)):
-        for j in range(0,2):
-            for k in range(0,2):
-                node1 = trusses[i].node1
-                node2 = trusses[i].node2
-                K[j+spatial_dims*node1][k+spatial_dims*node1] += trusses[i].K2D[j][k]
-                K[j+spatial_dims*node1][k+spatial_dims*node2] += trusses[i].K2D[j][k+2]
-                K[j+spatial_dims*node2][k+spatial_dims*node1] += trusses[i].K2D[j+2][k]
-                K[j+spatial_dims*node2][k+spatial_dims*node2] += trusses[i].K2D[j+2][k+2]
+        for j in range(0,spatial_dims):
+            for k in range(0,spatial_dims):
+                nodes = [trusses[i].node1, trusses[i].node2]
+                K[j+spatial_dims*nodes[0]][k+spatial_dims*nodes[0]] += trusses[i].K2D[j][k]
+                K[j+spatial_dims*nodes[0]][k+spatial_dims*nodes[1]] += trusses[i].K2D[j][k+spatial_dims]
+                K[j+spatial_dims*nodes[1]][k+spatial_dims*nodes[0]] += trusses[i].K2D[j+spatial_dims][k]
+                K[j+spatial_dims*nodes[1]][k+spatial_dims*nodes[1]] += trusses[i].K2D[j+spatial_dims][k+spatial_dims]
     return K
 
 def compile_F(dof, forces):
     F = np.zeros((dof,1))
     for i in range(0,len(forces)):
         node = forces[i].node
-        F[node*spatial_dims][0] += forces[i].fx
-        F[node*spatial_dims+1][0] += forces[i].fy
+        force_dims = [forces[i].fx, forces[i].fy]
+        for i in range(0,spatial_dims):
+            F[node*spatial_dims+i][0] += force_dims[i]
     return F
 
 def fix_nodes(K, F, c, fixed_nodes):
+    dim_set = ['x','y'] #TODO improve dimension extensibility
     for i in range(0,len(fixed_nodes)):
-        if (fixed_nodes[i].x_or_y == 'x'):
-            ind = spatial_dims*fixed_nodes[i].node
-        if (fixed_nodes[i].x_or_y == 'y'):
-            ind = spatial_dims*fixed_nodes[i].node+1
+        for j in range(0,spatial_dims):
+            if (fixed_nodes[i].x_or_y == dim_set[j])):
+                ind = spatial_dims*fixed_nodes[i].node+j
         K[ind][ind] += c
         F[ind][0] += c*fixed_nodes[i].disp
     return K, F
@@ -56,19 +56,16 @@ def assign_stresses(u, trusses):
     for i in range(0,len(trusses)):
         u_local = np.zeros((4,1))
         truss = trusses[i]
-        node1 = truss.node1
-        node2 = truss.node2
-        u_local[0][0] = u[truss.node1*spatial_dims][0]
-        u_local[1][0] = u[truss.node1*spatial_dims+1][0]
-        u_local[2][0] = u[truss.node2*spatial_dims][0]
-        u_local[3][0] = u[truss.node2*spatial_dims+1][0]
+        nodes = [truss.node1, truss.node2]
+        for j in range(0,spatial_dims):
+            u_local[j][0] = u[nodes[0]*spatial_dims+j][0]
+            u_local[spatial_dims+j][0] = u[nodes[1]*spatial_dims+j][0]
         stress = (truss.E/truss.l)*np.matrix(truss.eL)*\
                  np.matrix(u_local)
         truss.stress = stress.tolist()[0][0]
         truss.strain = truss.stress/truss.E
 
-def calc_solution():
-        
+def calc_solution():        
     dof = sim_params[1].val
     
     K = compile_K(dof,trusses)
