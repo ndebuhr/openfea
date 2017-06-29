@@ -34,7 +34,7 @@ def fix_nodes(K, F, c, fixed_nodes):
     dim_set = ['x','y'] #TODO improve dimension extensibility
     for i in range(0,len(fixed_nodes)):
         for j in range(0,spatial_dims):
-            if (fixed_nodes[i].x_or_y == dim_set[j])):
+            if (fixed_nodes[i].x_or_y == dim_set[j]):
                 ind = spatial_dims*fixed_nodes[i].node+j
         K[ind][ind] += c
         F[ind][0] += c*fixed_nodes[i].disp
