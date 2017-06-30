@@ -47,6 +47,8 @@ for i in range(0,len(trusses)):
     line_color = get_line_color(stress,max_stress)
     # Plot the truss on the figure
     plt.plot([x1, x2], [y1, y2], color=line_color)
+    plt.scatter(x1, y1, 25, c="g", alpha=0.9)
+    plt.scatter(x2, y2, 25, c="g", alpha=0.9)
     # Provide annotative text next to truss, with stress quantity
     plt.text((x1+x2)/2, (y1+y2)/2, r'$\sigma='+('%.4E' % stress )+'$')
 
