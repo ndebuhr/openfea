@@ -54,6 +54,102 @@ def test_trusses(nodes,num_trusses):
                         E,A])
     return trusses
 
+# TODO Enable command line "split" option for solving/plotting
+def split_trusses(nodes, trusses):
+    def get_intersection(m,b):
+        # y = m1*x+b1
+        # m1*x+b1 = m2*x+b2
+        # (m1-m2)*x = b2-b1
+        # x = (b2-b1)/(m1-m2)
+        x = (b[1]-b[0])/(m[0]-m[1])
+        y = m[0]*x+b[0]
+        return x, y
+    def check_intersection(x,y,nodes1,nodes2,shared_node):
+        if shared_node:
+            return False
+        checks = [False,False,False,False]
+        if (nodes1[0][0] < x) and (x < nodes1[1][0]):
+            checks[0] = True
+        if (nodes1[1][0] < x) and (x < nodes1[0][0]):
+            checks[0] = True
+        if (nodes1[0][1] < y) and (y < nodes1[1][1]):
+            checks[1] = True
+        if (nodes1[1][1] < y) and (y < nodes1[0][1]):
+            checks[1] = True
+        if (nodes2[0][0] < x) and (x < nodes2[1][0]):
+            checks[2] = True
+        if (nodes2[1][0] < x) and (x < nodes2[0][0]):
+            checks[2] = True
+        if (nodes2[0][1] < y) and (y < nodes2[1][1]):
+            checks[3] = True
+        if (nodes2[1][1] < y) and (y < nodes2[0][1]):
+            checks[3] = True
+        if False in checks:
+            return False
+        else:
+            return True
+    def unique_nodes(nodes):
+        checked = []
+        for e in nodes:
+            if e not in checked:
+                checked.append(e)
+        return checked
+    for i in range(0,len(trusses)):
+        n1 = [trusses[i][0], trusses[i][1]] #Left off here
+        n2 = [trusses[i][2], trusses[i][3]]
+        nodes1 = [n1,n2]
+        for j in range(0,len(trusses)):
+            if (i != j):
+                n1 = [trusses[j][0], trusses[j][1]]
+                n2 = [trusses[j][2], trusses[j][3]]
+                nodes2 = [n1,n2]
+                m = [(trusses[i][3]-trusses[i][1])/(trusses[i][2]-trusses[i][0])]
+                b = [trusses[i][1]-m[0]*trusses[i][0]]
+                m.append((trusses[j][3]-trusses[j][1])/(trusses[j][2]-trusses[j][0]))
+                b.append(trusses[j][1]-m[1]*trusses[j][0])
+                if (m[0] != m[1]): # if trusses are not parallel
+                    x, y = get_intersection(m,b)
+                    # if (nodes1[0] in nodes2):
+                    #     print(nodes1[0], ' in ', nodes2)
+                    #     shared_node = True
+                    # if (nodes1[1] in nodes2):
+                    #     print(nodes1[1], ' in ', nodes2)
+                    #     shared_node = True
+                    # if (nodes2[0] in nodes1):
+                    #     print(nodes2[0], ' in ', nodes1)
+                    #     shared_node = True
+                    # if (nodes2[1] in nodes1):
+                    #     print(nodes2[1], ' in ', nodes1)
+                    #     shared_node = True
+                    # print(x,y)
+                    # shared_node = False
+                    shared_node = False
+                    all_nodes = nodes1+nodes2
+                    set_nodes = unique_nodes(all_nodes)
+                    if (len(all_nodes) != len(set_nodes)):
+                        shared_node = True #if trusses share a node
+                    if (check_intersection(x,y,nodes1,nodes2,shared_node)):
+                        # print('Passed ',x,y)
+                        trusses.append([nodes1[0][0],nodes1[0][1],x,y,
+                                        trusses[i][4],trusses[i][5]])
+                        trusses.append([x,y,nodes1[1][0],nodes1[1][1],
+                                        trusses[i][4],trusses[i][5]])
+                        trusses.append([nodes2[0][0],nodes2[0][1],x,y,
+                                        trusses[j][4],trusses[j][5]])
+                        trusses.append([x,y,nodes2[1][0],nodes2[1][1],
+                                        trusses[j][4],trusses[j][5]])
+                        print(trusses[i],'\n',trusses[j])
+                        if ( i < j ):
+                            trusses.pop(j)
+                            trusses.pop(i)
+                        else:
+                            trusses.pop(i)
+                            trusses.pop(j)
+                        nodes.append([x,y])
+                        i=0
+                        j=0
+    return nodes, trusses
+                        
 def test_forces(nodes, num_forces):
     forces = []
     force_nodes = []
@@ -157,12 +253,13 @@ if (args.test_data):
     
     nodes = rand_nodes(num_nodes)
     trusses = test_trusses(nodes,num_trusses)
+    nodes, trusses = split_trusses(nodes,trusses)
     connect_tbl.content = append_test_data(connect_tbl.content,trusses);
     forces = test_forces(nodes,num_forces)
     force_tbl.content = append_test_data(force_tbl.content,forces)
     bcs = test_bcs(nodes,num_fixed)
     bc_tbl.content = append_test_data(bc_tbl.content,bcs)
-    sim_tbl.content = [sim_tbl.content[0]+[str(num_nodes*spatial_dims)]]
+    sim_tbl.content = [sim_tbl.content[0]+[str(len(nodes)*spatial_dims)]]
     
 input_files = [connect_tbl,force_tbl,bc_tbl,sim_tbl]
 
