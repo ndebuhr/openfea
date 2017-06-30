@@ -30,7 +30,7 @@ def node_lookup(trusses):
         nodes_set[str(trusses[i].node2)] = [trusses[i].x2,trusses[i].y2]
     return nodes_set
 
-forces, u, stresses, R, trusses = ts.calc_solution()
+forces, u, stresses, R, trusses, fixed_nodes = ts.calc_solution()
 
 max_stress = get_max_stress(trusses)
 max_dim = get_max_dim(trusses)
@@ -63,7 +63,19 @@ for i in range(0,len(forces)):
         x = xy[0]
         y = xy[1]
         plt.arrow(x, y, 0, max_dim/30, fc="b", ec="b", head_width=max_dim/80, head_length=max_dim/40 )
-    
+
+for i in range(0,len(fixed_nodes)):
+    xy = nodes_set[str(fixed_nodes[i].node)]
+    x = xy[0]
+    y = xy[1]
+    x_delta = max_dim
+    if (fixed_nodes[i].x_or_y=='x'):
+        plt.plot([x,x],[y-max_dim/40,y+max_dim/40],
+                 color=[1,0,1],linewidth=2)
+    if (fixed_nodes[i].x_or_y=='y'):
+        plt.plot([x-max_dim/40, x+max_dim/40],[y,y],
+                 color=[1,0,1],linewidth=2)
+
 plt.title('Truss Stresses')
 plt.gca().set_aspect('equal', adjustable='box') # No geometric skew
 
