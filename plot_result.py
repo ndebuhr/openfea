@@ -57,12 +57,20 @@ for i in range(0,len(forces)):
         xy = nodes_set[str(forces[i].node)]
         x = xy[0]
         y = xy[1]
-        plt.arrow(x, y, max_dim/30, 0, fc="b", ec="b", head_width=max_dim/80, head_length=max_dim/40 )
+        if (forces[i].fx < 0):
+            dx = -max_dim/30
+        else:
+            dx = max_dim/30
+        plt.arrow(x, y, dx, 0, fc="b", ec="b", head_width=max_dim/80, head_length=max_dim/40 )
     if (forces[i].fy != 0):
         xy = nodes_set[str(forces[i].node)]
         x = xy[0]
         y = xy[1]
-        plt.arrow(x, y, 0, max_dim/30, fc="b", ec="b", head_width=max_dim/80, head_length=max_dim/40 )
+        if (forces[i].fy < 0):
+            dy = -max_dim/30
+        else:
+            dy = max_dim/30
+        plt.arrow(x, y, 0, dy, fc="b", ec="b", head_width=max_dim/80, head_length=max_dim/40 )
 
 for i in range(0,len(fixed_nodes)):
     xy = nodes_set[str(fixed_nodes[i].node)]
