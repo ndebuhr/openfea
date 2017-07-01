@@ -30,9 +30,11 @@ def rand_nodes(num_nodes):
 
 def test_trusses(nodes,num_trusses):
     def truss_already_exists(nodes,node1,node2,truss_set):
-        truss_add_fwd = [[nodes[node1][0],nodes[node1][1]],
-                         [nodes[node2][0],nodes[node2][1]]]
-        truss_add_back = [truss_add_fwd[1],truss_add_fwd[0]]
+        # Checks A->B against existing A->B and B->A
+        truss_add_fwd = [[nodes[node1][0],nodes[node1][1]], #x1,y1
+                         [nodes[node2][0],nodes[node2][1]]] #x2,y2
+        truss_add_back = [truss_add_fwd[1], #x2,y2
+                          truss_add_fwd[0]] #x1,y1
         if (truss_add_fwd in truss_set):
             return True
         if (truss_add_back in truss_set):
@@ -41,26 +43,40 @@ def test_trusses(nodes,num_trusses):
     trusses = []
     truss_set = []
     for i in range(1,len(nodes)): #connect all nodes at least once
-        E = random.uniform(test_E_range['min'],test_E_range['max'])
-        A = random.uniform(test_A_range['min'],test_A_range['max'])
-        trusses.append([nodes[i][0],nodes[i][1],
-                        nodes[i-1][0],nodes[i-1][1],
-                        E,A])
+        truss = {}
+        truss['E'] = random.uniform(test_E_range['min'],test_E_range['max'])
+        truss['A'] = random.uniform(test_A_range['min'],test_A_range['max'])
+        truss['x1'] = nodes[i][0]
+        truss['y1'] = nodes[i][1]
+        truss['x2'] = nodes[i-1][0]
+        truss['y2'] = nodes[i-1][1]
+        trusses.append([truss['x1'],truss['y1'],truss['x2'],truss['y2'],
+                        truss['E'],truss['A']])
         truss_set.append([nodes[i],nodes[i-1]])
     for i in range(len(nodes),num_trusses+1): #additional random connections
-        E = random.uniform(test_E_range['min'],test_E_range['max'])
-        A = random.uniform(test_A_range['min'],test_A_range['max'])
+        truss = {}
+        truss['E'] = random.uniform(test_E_range['min'],test_E_range['max'])
+        truss['A'] = random.uniform(test_A_range['min'],test_A_range['max'])
         while True:
             node1 = random.randint(0,len(nodes)-1)
             node2 = random.randint(0,len(nodes)-1)
             if (node1 != node2):
                 if not truss_already_exists(nodes,node1,node2,truss_set):
                     break
-        truss_set.append([[nodes[node1][0],nodes[node1][1]],
-                          [nodes[node2][0],nodes[node2][1]]])
-        trusses.append([nodes[node1][0],nodes[node1][1],
-                        nodes[node2][0],nodes[node2][1],
-                        E,A])
+        truss['x1'] = nodes[node1][0]
+        truss['y1'] = nodes[node1][1]
+        truss['x2'] = nodes[node2][0]
+        truss['y2'] = nodes[node2][1]
+        truss_set.append([[truss['x1'],
+                           truss['y1']],
+                          [truss['x2'],
+                           truss['y2']]])
+        trusses.append([truss['x1'],
+                        truss['y1'],
+                        truss['x2'],
+                        truss['y2'],
+                        truss['E'],
+                        truss['A']])
     return trusses
 
 # TODO Enable command line "split" option for solving/plotting
@@ -72,28 +88,27 @@ def split_trusses(nodes, trusses):
     def check_intersection(x,y,nodes1,nodes2,shared_node):
         if shared_node:
             return False
-        checks = [False,False,False,False]
-        # TODO Clean this up
-        if (nodes1[0][0] < x) and (x < nodes1[1][0]):
-            checks[0] = True
-        if (nodes1[1][0] < x) and (x < nodes1[0][0]):
-            checks[0] = True
-        if (nodes1[0][1] < y) and (y < nodes1[1][1]):
-            checks[1] = True
-        if (nodes1[1][1] < y) and (y < nodes1[0][1]):
-            checks[1] = True
-        if (nodes2[0][0] < x) and (x < nodes2[1][0]):
-            checks[2] = True
-        if (nodes2[1][0] < x) and (x < nodes2[0][0]):
-            checks[2] = True
-        if (nodes2[0][1] < y) and (y < nodes2[1][1]):
-            checks[3] = True
-        if (nodes2[1][1] < y) and (y < nodes2[0][1]):
-            checks[3] = True
-        if False in checks:
-            return False
-        else:
-            return True
+        checks = [[False,False], #for truss 1
+                  [False,False]] #for truss 2
+        nodes = [nodes1,nodes2]
+        for i in range(0,2):
+            node_bounds = nodes[i]
+            x1 = node_bounds[0][0]
+            x2 = node_bounds[1][0]
+            y1 = node_bounds[0][1]
+            y2 = node_bounds[1][1]
+            if (x1 < x) and (x < x2):
+                checks[i][0] = True
+            if (x2 < x) and (x < x1):
+                checks[i][0] = True
+            if (y1 < y) and (y < y2):
+                checks[i][1] = True
+            if (y2 < y) and (y < y1):
+                checks[i][1] = True
+        for i in range(0,len(checks)):
+            if False in checks[i]:
+                return False
+        return True
     def unique_nodes(nodes):
         checked = []
         for e in nodes:
@@ -101,7 +116,7 @@ def split_trusses(nodes, trusses):
                 checked.append(e)
         return checked
     for i in range(0,len(trusses)):
-        n1 = [trusses[i][0], trusses[i][1]] #Left off here
+        n1 = [trusses[i][0], trusses[i][1]]
         n2 = [trusses[i][2], trusses[i][3]]
         nodes1 = [n1,n2]
         E1 = trusses[i][4]
@@ -139,7 +154,7 @@ def split_trusses(nodes, trusses):
                             trusses.pop(i)
                             trusses.pop(j)
                         nodes.append([x,y])
-                        i=0
+                        i=0 #Restart truss intersection checking
                         j=0
     return nodes, trusses
                         
@@ -160,10 +175,10 @@ def test_forces(nodes, num_forces):
         Fx = random.uniform(test_F_range['min'],test_F_range['max'])
         Fy = random.uniform(test_F_range['min'],test_F_range['max'])
         if (random.randint(0,1)):
-            if (random.randint(0,1)):
+            if (random.randint(0,1)): #choose x or y by random
                 Fx = 0
             else:
-                Fy=0
+                Fy = 0
         forces.append([x,y,Fx,Fy])
     return forces
 
@@ -179,7 +194,7 @@ def test_bcs(nodes, num_fixed):
             break
     for i in range(0,num_fixed):
         node = fix_nodes[i]
-        if (random.randint(0,1)==1):
+        if (random.randint(0,1)==1): #choose x or y randomly
             x_or_y = 'x'
         else:
             x_or_y = 'y'
@@ -191,6 +206,11 @@ def append_test_data(tbl_content,test_data):
     for i in range(0,len(test_data)):
         tbl_content.append(test_data[i])
         return test_data
+
+def test_stdin(prompt, default):
+    test_num = input(prompt + ' [' + str(default) + ']: ')
+    test_num = (default if (test_num == '') else test_num)
+    return int(test_num)
 
 # Read arguments
 parser = argparse.ArgumentParser()
@@ -228,11 +248,6 @@ sim_tbl = input_table(sim_filename,
                       sim_name,
                       sim_headers,
                       sim_content)
-
-def test_stdin(prompt, default):
-    test_num = input(prompt + ' [' + str(default) + ']: ')
-    test_num = (default if (test_num == '') else test_num)
-    return int(test_num)
 
 # Add randomly-generated test data if -t flag specified
 if (args.test_data):
