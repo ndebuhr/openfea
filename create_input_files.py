@@ -4,10 +4,14 @@ import random
 import argparse
 
 populate_data = False
-test_E_range = [1,1e12]
-test_A_range = [1e-6,1e6]
-test_coord_range = [0,1000] #TODO test/allow negative numbers
-test_F_range = [1,1e6]
+test_E_range = {'min': 1,
+                'max': 1e12}
+test_A_range = {'min': 1e-6,
+                'max': 1e6}
+test_coord_range = {'min': 0,
+                    'max': 1000} #TODO test/allow negative numbers
+test_F_range = {'min': 1,
+                'max': 1e6}
 
 class input_table:
     def __init__(self, filename, name, headers, content=[]):
@@ -19,34 +23,39 @@ class input_table:
 def rand_nodes(num_nodes):
     nodes = []
     for i in range(0,num_nodes):
-        x = random.uniform(test_coord_range[0], test_coord_range[1])
-        y = random.uniform(test_coord_range[0], test_coord_range[1])
+        x = random.uniform(test_coord_range['min'], test_coord_range['max'])
+        y = random.uniform(test_coord_range['min'], test_coord_range['max'])
         nodes.append([x,y])
     return nodes
 
 def test_trusses(nodes,num_trusses):
+    def truss_already_exists(nodes,node1,node2,truss_set):
+        truss_add_fwd = [[nodes[node1][0],nodes[node1][1]],
+                         [nodes[node2][0],nodes[node2][1]]]
+        truss_add_back = [truss_add_fwd[1],truss_add_fwd[0]]
+        if (truss_add_fwd in truss_set):
+            return True
+        if (truss_add_back in truss_set):
+            return True
+        return False
     trusses = []
     truss_set = []
     for i in range(1,len(nodes)): #connect all nodes at least once
-        E = random.uniform(test_E_range[0],test_E_range[1])
-        A = random.uniform(test_A_range[0],test_A_range[1])
+        E = random.uniform(test_E_range['min'],test_E_range['max'])
+        A = random.uniform(test_A_range['min'],test_A_range['max'])
         trusses.append([nodes[i][0],nodes[i][1],
                         nodes[i-1][0],nodes[i-1][1],
                         E,A])
         truss_set.append([nodes[i],nodes[i-1]])
     for i in range(len(nodes),num_trusses+1): #additional random connections
-        E = random.uniform(test_E_range[0],test_E_range[1])
-        A = random.uniform(test_A_range[0],test_A_range[1])
+        E = random.uniform(test_E_range['min'],test_E_range['max'])
+        A = random.uniform(test_A_range['min'],test_A_range['max'])
         while True:
             node1 = random.randint(0,len(nodes)-1)
             node2 = random.randint(0,len(nodes)-1)
-            truss_add_fwd = [[nodes[node1][0],nodes[node1][1]],
-                             [nodes[node2][0],nodes[node2][1]]]
-            truss_add_back = [truss_add_fwd[1],truss_add_fwd[0]]
             if (node1 != node2):
-                if not (truss_add_fwd in truss_set):
-                    if not (truss_add_back in truss_set):
-                        break
+                if not truss_already_exists(nodes,node1,node2,truss_set):
+                    break
         truss_set.append([[nodes[node1][0],nodes[node1][1]],
                           [nodes[node2][0],nodes[node2][1]]])
         trusses.append([nodes[node1][0],nodes[node1][1],
@@ -57,10 +66,6 @@ def test_trusses(nodes,num_trusses):
 # TODO Enable command line "split" option for solving/plotting
 def split_trusses(nodes, trusses):
     def get_intersection(m,b):
-        # y = m1*x+b1
-        # m1*x+b1 = m2*x+b2
-        # (m1-m2)*x = b2-b1
-        # x = (b2-b1)/(m1-m2)
         x = (b[1]-b[0])/(m[0]-m[1])
         y = m[0]*x+b[0]
         return x, y
@@ -68,6 +73,7 @@ def split_trusses(nodes, trusses):
         if shared_node:
             return False
         checks = [False,False,False,False]
+        # TODO Clean this up
         if (nodes1[0][0] < x) and (x < nodes1[1][0]):
             checks[0] = True
         if (nodes1[1][0] < x) and (x < nodes1[0][0]):
@@ -98,47 +104,34 @@ def split_trusses(nodes, trusses):
         n1 = [trusses[i][0], trusses[i][1]] #Left off here
         n2 = [trusses[i][2], trusses[i][3]]
         nodes1 = [n1,n2]
+        E1 = trusses[i][4]
+        A1 = trusses[i][5]
         for j in range(0,len(trusses)):
             if (i != j):
-                n1 = [trusses[j][0], trusses[j][1]]
-                n2 = [trusses[j][2], trusses[j][3]]
+                n1 = [trusses[j][0], #x1
+                      trusses[j][1]] #y1
+                n2 = [trusses[j][2], #x2
+                      trusses[j][3]] #y2
                 nodes2 = [n1,n2]
+                E2 = trusses[j][4]
+                A2 = trusses[j][5]
                 m = [(trusses[i][3]-trusses[i][1])/(trusses[i][2]-trusses[i][0])]
                 b = [trusses[i][1]-m[0]*trusses[i][0]]
                 m.append((trusses[j][3]-trusses[j][1])/(trusses[j][2]-trusses[j][0]))
                 b.append(trusses[j][1]-m[1]*trusses[j][0])
                 if (m[0] != m[1]): # if trusses are not parallel
                     x, y = get_intersection(m,b)
-                    # if (nodes1[0] in nodes2):
-                    #     print(nodes1[0], ' in ', nodes2)
-                    #     shared_node = True
-                    # if (nodes1[1] in nodes2):
-                    #     print(nodes1[1], ' in ', nodes2)
-                    #     shared_node = True
-                    # if (nodes2[0] in nodes1):
-                    #     print(nodes2[0], ' in ', nodes1)
-                    #     shared_node = True
-                    # if (nodes2[1] in nodes1):
-                    #     print(nodes2[1], ' in ', nodes1)
-                    #     shared_node = True
-                    # print(x,y)
-                    # shared_node = False
-                    shared_node = False
                     all_nodes = nodes1+nodes2
                     set_nodes = unique_nodes(all_nodes)
                     if (len(all_nodes) != len(set_nodes)):
                         shared_node = True #if trusses share a node
+                    else:
+                        shared_node = False
                     if (check_intersection(x,y,nodes1,nodes2,shared_node)):
-                        # print('Passed ',x,y)
-                        trusses.append([nodes1[0][0],nodes1[0][1],x,y,
-                                        trusses[i][4],trusses[i][5]])
-                        trusses.append([x,y,nodes1[1][0],nodes1[1][1],
-                                        trusses[i][4],trusses[i][5]])
-                        trusses.append([nodes2[0][0],nodes2[0][1],x,y,
-                                        trusses[j][4],trusses[j][5]])
-                        trusses.append([x,y,nodes2[1][0],nodes2[1][1],
-                                        trusses[j][4],trusses[j][5]])
-                        print(trusses[i],'\n',trusses[j])
+                        trusses.append([nodes1[0][0],nodes1[0][1],x,y,E1,A1])
+                        trusses.append([x,y,nodes1[1][0],nodes1[1][1],E1,A1])
+                        trusses.append([nodes2[0][0],nodes2[0][1],x,y,E2,A2])
+                        trusses.append([x,y,nodes2[1][0],nodes2[1][1],E2,A2])
                         if ( i < j ):
                             trusses.pop(j)
                             trusses.pop(i)
@@ -164,8 +157,8 @@ def test_forces(nodes, num_forces):
         node = force_nodes[i]
         x = nodes[node][0]
         y = nodes[node][1]
-        Fx = random.uniform(test_F_range[0],test_F_range[1])
-        Fy = random.uniform(test_F_range[0],test_F_range[1])
+        Fx = random.uniform(test_F_range['min'],test_F_range['max'])
+        Fy = random.uniform(test_F_range['min'],test_F_range['max'])
         if (random.randint(0,1)):
             if (random.randint(0,1)):
                 Fx = 0
