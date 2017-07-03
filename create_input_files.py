@@ -275,29 +275,27 @@ sim_tbl = input_table(sim_filename,
                       sim_content)
 
 def prune_truss(nodes,trusses):
-    i=0
-    j=0
-    while ( i < len(nodes) ):
-        x_check = nodes[i][0]
-        y_check = nodes[i][1]
-        check_count = 0
-        while ( j < len(trusses) ):
-            if (x_check in trusses[j]) or (y_check in trusses[j]):
-                check_count += 1
-            j += 1
-        if (check_count == 1):
-            old_len_trusses = len(trusses)
-            k = 0
-            while ( len(trusses) == old_len_trusses ):
-                if (x_check in trusses[k]) or (y_check in trusses[k]):
-                    trusses.pop(k)
-                    nodes.pop(i)
-                    i=-1
-                    j=-1
-                k += 1
-        i += 1
-        j += 1
-    return nodes, trusses
+    new_truss_set = []
+    top_truss = trusses[:]
+    for i in range(0,len(top_truss)):
+        pop_truss = trusses.pop(i)
+        remove_node_1 = True
+        remove_node_2 = True
+        for j in range(0,len(trusses)):
+            if (pop_truss[0] in trusses[j]) and (pop_truss[1] in trusses[j]):
+                remove_node_1 = False
+            if (pop_truss[2] in trusses[j]) and (pop_truss[3] in trusses[j]):
+                remove_node_2 = False
+        if (remove_node_1):
+            nodes.pop(nodes.index([pop_truss[0],pop_truss[1]]))
+            print('Removed One!')
+        if (remove_node_2):
+            nodes.pop(nodes.index([pop_truss[2],pop_truss[3]]))
+            print('Removed One!')
+        if (remove_node_1 == False) and (remove_node_2 == False):
+            new_truss_set.append(pop_truss)
+        trusses = trusses[0:i] + [pop_truss] + trusses[i:]
+    return nodes, new_truss_set
         
 if (args.bridge):
     num_nodes = 8
