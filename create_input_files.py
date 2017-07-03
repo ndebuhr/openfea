@@ -28,6 +28,14 @@ def rand_nodes(num_nodes):
         nodes.append([x,y])
     return nodes
 
+def bridge_nodes(nodes, num_base):
+    for i in range(0,num_base):
+        x = 1000*i/(num_base-1)
+        y = 0
+        nodes.append([x,y])
+    nodes.append(nodes.pop(0))
+    return nodes
+
 def test_trusses(nodes,num_trusses):
     def truss_already_exists(nodes,node1,node2,truss_set):
         # Checks A->B against existing A->B and B->A
@@ -79,7 +87,6 @@ def test_trusses(nodes,num_trusses):
                         truss['A']])
     return trusses
 
-# TODO Enable command line "split" option for solving/plotting
 def split_trusses(nodes, trusses):
     def get_intersection(m,b):
         x = (b[1]-b[0])/(m[0]-m[1])
@@ -182,6 +189,12 @@ def test_forces(nodes, num_forces):
         forces.append([x,y,Fx,Fy])
     return forces
 
+def bridge_forces(num_base):
+    forces = []
+    for i in range(1,num_base-1):
+        forces.append([1000*i/(num_base-1),0,0,-10000])
+    return forces
+
 def test_bcs(nodes, num_fixed):
     bcs = []
     fix_nodes = []
@@ -202,6 +215,15 @@ def test_bcs(nodes, num_fixed):
                     x_or_y,0])
     return bcs
 
+def bridge_bcs():
+    bcs = []
+    # x,y,direction,disp
+    bcs.append([0,0,'x',0])
+    bcs.append([0,0,'y',0])
+    bcs.append([1000,0,'x',0])
+    bcs.append([1000,0,'y',0])
+    return bcs
+
 def append_test_data(tbl_content,test_data):
     for i in range(0,len(test_data)):
         tbl_content.append(test_data[i])
@@ -216,6 +238,9 @@ def test_stdin(prompt, default):
 parser = argparse.ArgumentParser()
 parser.add_argument("-t", "--test_data",
                     help="populate input files with test data",
+                    action="store_true")
+parser.add_argument("-b", "--bridge",
+                    help="create random bridge designs",
                     action="store_true")
 args = parser.parse_args()
     
@@ -249,6 +274,51 @@ sim_tbl = input_table(sim_filename,
                       sim_headers,
                       sim_content)
 
+def prune_truss(nodes,trusses):
+    i=0
+    j=0
+    while ( i < len(nodes) ):
+        x_check = nodes[i][0]
+        y_check = nodes[i][1]
+        check_count = 0
+        while ( j < len(trusses) ):
+            if (x_check in trusses[j]) or (y_check in trusses[j]):
+                check_count += 1
+            j += 1
+        if (check_count == 1):
+            old_len_trusses = len(trusses)
+            k = 0
+            while ( len(trusses) == old_len_trusses ):
+                if (x_check in trusses[k]) or (y_check in trusses[k]):
+                    trusses.pop(k)
+                    nodes.pop(i)
+                    i=-1
+                    j=-1
+                k += 1
+        i += 1
+        j += 1
+    return nodes, trusses
+        
+if (args.bridge):
+    num_nodes = 8
+    num_trusses = 12
+    num_forces = 3
+    nodes = rand_nodes(num_nodes)
+    num_base = 2
+    nodes = bridge_nodes(nodes, num_base)
+    trusses = test_trusses(nodes,num_trusses)
+    nodes, trusses = split_trusses(nodes,trusses)
+    # TODO Remove workaround below and actually solve issue
+    nodes, trusses = split_trusses(nodes,trusses)
+    nodes, trusses = prune_truss(nodes, trusses)
+    forces = test_forces(nodes,num_forces)
+    bcs = bridge_bcs()
+    connect_tbl.content = append_test_data(connect_tbl.content,trusses);
+    force_tbl.content = append_test_data(force_tbl.content,forces)
+    bc_tbl.content = append_test_data(bc_tbl.content,bcs)
+    sim_tbl.content = [sim_tbl.content[0]+\
+                      [str(len(nodes)*spatial_dims)]]
+    
 # Add randomly-generated test data if -t flag specified
 if (args.test_data):
     num_nodes = test_stdin('Number of nodes',5)
