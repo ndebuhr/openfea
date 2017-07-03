@@ -1,6 +1,14 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import truss_struct as ts
+from matplotlib.patches import Rectangle
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-b", "--bridge",
+                    help="create random bridge designs",
+                    action="store_true")
+args = parser.parse_args()
 
 def get_max_stress(trusses):
     max_stress = trusses[0].stress
@@ -99,4 +107,9 @@ ymin = ymin-0.1*lim_height
 ymax = ymax+0.1*lim_height
 plt.ylim( ymin, ymax )
 
+if (args.bridge):
+    currentAxis = plt.gca()
+    currentAxis.add_patch(Rectangle((-280, -300), 300, 300, facecolor="green"))
+    currentAxis.add_patch(Rectangle((980, -300), 300, 300, facecolor="green"))
+    
 plt.show()
