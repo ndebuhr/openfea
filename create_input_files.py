@@ -296,21 +296,38 @@ sim_tbl = input_table(sim_filename,
                       sim_name,
                       sim_headers,
                       sim_content)
-        
-if (args.bridge):
-    num_nodes = 8
-    num_trusses = 12
-    num_forces = 3
+
+def test_data_trusses(num_nodes, num_trusses, num_base=None, is_bridge=False):
     nodes = rand_nodes(num_nodes)
-    num_base = 2
-    nodes = bridge_nodes(nodes, num_base)
+    if is_bridge:
+        nodes = bridge_nodes(nodes, num_base)
     trusses = test_trusses(nodes,num_trusses)
     nodes, trusses = split_trusses(nodes,trusses)
     # TODO Remove workaround below and actually solve issue
     nodes, trusses = split_trusses(nodes,trusses)
     nodes, trusses = prune_truss(nodes, trusses)
+    return nodes, trusses
+
+def test_data_forces(num_forces, nodes, is_bridge=False):
     forces = test_forces(nodes,num_forces)
-    bcs = bridge_bcs()
+    return forces
+
+def test_data_bcs(num_fixed=None,is_bridge=False):
+    if is_bridge:
+        bcs = bridge_bcs()
+    else:
+        bcs = test_bcs(nodes,num_fixed)
+    return bcs
+    
+if (args.bridge):
+    num_nodes = 8
+    num_trusses = 12
+    num_forces = 3
+    num_base = 2
+    nodes, trusses = test_data_trusses(num_nodes,num_trusses,num_base,True)
+    forces = test_forces(nodes,num_forces)
+    bcs = test_data_bcs(is_bridge=True)
+    
     connect_tbl.content = append_test_data(connect_tbl.content,trusses);
     force_tbl.content = append_test_data(force_tbl.content,forces)
     bc_tbl.content = append_test_data(bc_tbl.content,bcs)
@@ -327,14 +344,12 @@ if (args.test_data):
     num_fixed = test_stdin('Number of fixed',3)
     assert (num_fixed < num_nodes)
     
-    nodes = rand_nodes(num_nodes)
-    trusses = test_trusses(nodes,num_trusses)
-    nodes, trusses = split_trusses(nodes,trusses)
-    nodes, trusses = prune_truss(nodes, trusses)
+    nodes, trusses = test_data_trusses(num_nodes,num_trusses)
+    forces = test_data_forces(num_forces,nodes)
+    bcs = test_data_bcs(num_fixed)
+
     connect_tbl.content = append_test_data(connect_tbl.content,trusses);
-    forces = test_forces(nodes,num_forces)
     force_tbl.content = append_test_data(force_tbl.content,forces)
-    bcs = test_bcs(nodes,num_fixed)
     bc_tbl.content = append_test_data(bc_tbl.content,bcs)
     sim_tbl.content = [sim_tbl.content[0]+[str(len(nodes)*spatial_dims)]]
     
