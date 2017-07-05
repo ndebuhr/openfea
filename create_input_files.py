@@ -164,7 +164,30 @@ def split_trusses(nodes, trusses):
                         i=0 #Restart truss intersection checking
                         j=0
     return nodes, trusses
-                        
+
+def prune_truss(nodes,trusses):
+    new_truss_set = []
+    top_truss = trusses[:]
+    for i in range(0,len(top_truss)):
+        pop_truss = trusses.pop(i)
+        remove_node_1 = True
+        remove_node_2 = True
+        for j in range(0,len(trusses)):
+            if (pop_truss[0] in trusses[j]) and (pop_truss[1] in trusses[j]):
+                remove_node_1 = False
+            if (pop_truss[2] in trusses[j]) and (pop_truss[3] in trusses[j]):
+                remove_node_2 = False
+        if (remove_node_1):
+            nodes.pop(nodes.index([pop_truss[0],pop_truss[1]]))
+            print('Removed One!')
+        if (remove_node_2):
+            nodes.pop(nodes.index([pop_truss[2],pop_truss[3]]))
+            print('Removed One!')
+        if (remove_node_1 == False) and (remove_node_2 == False):
+            new_truss_set.append(pop_truss)
+        trusses = trusses[0:i] + [pop_truss] + trusses[i:]
+    return nodes, new_truss_set
+
 def test_forces(nodes, num_forces):
     forces = []
     force_nodes = []
@@ -273,29 +296,6 @@ sim_tbl = input_table(sim_filename,
                       sim_name,
                       sim_headers,
                       sim_content)
-
-def prune_truss(nodes,trusses):
-    new_truss_set = []
-    top_truss = trusses[:]
-    for i in range(0,len(top_truss)):
-        pop_truss = trusses.pop(i)
-        remove_node_1 = True
-        remove_node_2 = True
-        for j in range(0,len(trusses)):
-            if (pop_truss[0] in trusses[j]) and (pop_truss[1] in trusses[j]):
-                remove_node_1 = False
-            if (pop_truss[2] in trusses[j]) and (pop_truss[3] in trusses[j]):
-                remove_node_2 = False
-        if (remove_node_1):
-            nodes.pop(nodes.index([pop_truss[0],pop_truss[1]]))
-            print('Removed One!')
-        if (remove_node_2):
-            nodes.pop(nodes.index([pop_truss[2],pop_truss[3]]))
-            print('Removed One!')
-        if (remove_node_1 == False) and (remove_node_2 == False):
-            new_truss_set.append(pop_truss)
-        trusses = trusses[0:i] + [pop_truss] + trusses[i:]
-    return nodes, new_truss_set
         
 if (args.bridge):
     num_nodes = 8
@@ -330,6 +330,7 @@ if (args.test_data):
     nodes = rand_nodes(num_nodes)
     trusses = test_trusses(nodes,num_trusses)
     nodes, trusses = split_trusses(nodes,trusses)
+    nodes, trusses = prune_truss(nodes, trusses)
     connect_tbl.content = append_test_data(connect_tbl.content,trusses);
     forces = test_forces(nodes,num_forces)
     force_tbl.content = append_test_data(force_tbl.content,forces)
